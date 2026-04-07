@@ -1,0 +1,15 @@
+{
+  "name": "google-example",
+  "baseUrl": "https://www.google.com",
+  "timeouts": {
+    "navigation": 30000,
+    "action": 15000,
+    "assertion": 10000
+  },
+  "logging": {
+    "level": "error",
+    "logScenarioErrors": true,
+    "includeStack": true,
+    "includeUserContext": false
+  }
+}

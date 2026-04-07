@@ -1,0 +1,18 @@
+{
+  "name": "dev",
+  "baseUrl": "https://dev.example.com",
+  "authUrl": "https://dev.example.com/login",
+  "apiUrl": "https://dev.example.com/api",
+  "tenantId": "dev-tenant",
+  "timeouts": {
+    "navigation": 30000,
+    "action": 15000,
+    "assertion": 10000
+  },
+  "logging": {
+    "level": "error",
+    "logScenarioErrors": true,
+    "includeStack": true,
+    "includeUserContext": false
+  }
+}

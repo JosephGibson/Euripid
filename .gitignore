@@ -1,0 +1,21 @@
+# Run output (keep the placeholder so git tracks the directory)
+results/*/
+results/*.zip
+!results/.gitkeep
+
+# k6 binary
+bin/k6
+bin/k6.exe
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*~
+*.swo

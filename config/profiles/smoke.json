@@ -1,0 +1,12 @@
+{
+  "name": "smoke",
+  "description": "Single-VU sanity check",
+  "executor": "shared-iterations",
+  "vus": 1,
+  "iterations": 1,
+  "maxDuration": "1m",
+  "thresholds": {
+    "browser_web_vital_lcp": ["p(95)<4000"],
+    "checks": ["rate>0.99"]
+  }
+}
