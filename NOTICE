@@ -1,0 +1,19 @@
+Euripid
+
+This project may bundle the k6 binary (bin/k6.exe) for Windows zero-install
+convenience. k6 is licensed under the GNU Affero General Public License v3.0
+and is copyright Grafana Labs and contributors. The bundled binary is
+unmodified. Source: https://github.com/grafana/k6
+
+Euripid scenarios load the following third-party k6 modules at runtime via
+URL imports. These are not redistributed in this repository:
+
+  - k6-reporter (benc-uk)        MIT
+    https://github.com/benc-uk/k6-reporter
+  - k6 jslib papaparse           MIT
+    https://github.com/grafana/jslib.k6.io
+  - k6 jslib k6-summary          MIT
+    https://github.com/grafana/jslib.k6.io
+
+v1.0 imports these from upstream URLs without pinning. See CHANGELOG.md and
+AGENTS.md for the known reproducibility risk and the v1.1 plan.

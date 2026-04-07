@@ -1,0 +1,22 @@
+// src/lib/metrics.js
+import { Trend, Counter } from 'k6/metrics';
+
+/** Time spent in credential entry + submit (legacy name; thresholds may reference it). */
+export const loginDuration = new Trend('flow_login_duration', true);
+
+/** Wall-clock time for the whole flow (legacy). */
+export const flowDuration = new Trend('flow_total_duration', true);
+
+export const flowErrors = new Counter('flow_errors');
+
+/**
+ * Per-transaction duration (tag: `transaction`). Shows in HTML/JSON summary as a custom Trend;
+ * pairs with k6 `group()` timings for the same names.
+ */
+export const transactionDuration = new Trend('transaction_duration', true);
+
+/**
+ * Count of logged scenario failures (tag: `phase`, `scenario`). Use for thresholds, e.g.
+ * `scenario_errors{phase:login_flow}<10`.
+ */
+export const scenarioErrors = new Counter('scenario_errors');

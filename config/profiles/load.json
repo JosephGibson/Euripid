@@ -1,0 +1,17 @@
+{
+  "name": "load",
+  "description": "Ramped load test",
+  "executor": "ramping-vus",
+  "startVUs": 0,
+  "stages": [
+    { "duration": "30s", "target": 5 },
+    { "duration": "2m",  "target": 5 },
+    { "duration": "30s", "target": 0 }
+  ],
+  "gracefulRampDown": "30s",
+  "thresholds": {
+    "browser_web_vital_lcp": ["p(95)<4000"],
+    "browser_web_vital_fcp": ["p(95)<2500"],
+    "checks": ["rate>0.95"]
+  }
+}
