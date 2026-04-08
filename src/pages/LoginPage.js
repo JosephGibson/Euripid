@@ -28,17 +28,17 @@ export class LoginPage extends BasePage {
   async loginAs(user, opts = {}) {
     const s = LoginPage.SELECTORS;
     const fieldTimeout = this.resolveTimeout('assertion', opts.timeout);
+    const actionTimeout = this.resolveTimeout('action', opts.timeout);
 
     // Wait for the form fields before interacting — if the app is slow to
     // render, this fails with a clear timeout instead of a "locator not found".
     await this.page.locator(s.username).waitFor({ state: 'visible', timeout: fieldTimeout });
+    await this.page.locator(s.password).waitFor({ state: 'visible', timeout: fieldTimeout });
+    await this.page.locator(s.submit).waitFor({ state: 'visible', timeout: fieldTimeout });
 
-    await this.page.locator(s.username).type(user.username);
-    await this.page.locator(s.password).type(user.password);
-    await this.page.locator(s.submit).click();
-    await this.page.waitForLoadState('load', {
-      timeout: this.resolveTimeout('navigation'),
-    });
+    await this.page.locator(s.username).fill(user.username, { timeout: actionTimeout });
+    await this.page.locator(s.password).fill(user.password, { timeout: actionTimeout });
+    await this.page.locator(s.submit).click({ timeout: actionTimeout });
   }
 
   /**

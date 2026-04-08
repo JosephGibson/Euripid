@@ -2,6 +2,27 @@
 
 All notable changes to Euripid. Format loosely follows Keep a Changelog.
 
+## [1.2.0] - 2026-04-08
+
+### Added
+- **Vendored runtime helpers** (`src/vendor/`) for CSV parsing, text summary rendering, and HTML report generation so runs no longer depend on third-party URL imports at init time.
+- **`data_errors` counter** (`src/lib/metrics.js`) to separate CSV/data-stage failures from flow execution failures in scenario reporting.
+
+### Changed
+- **`config.js`** now performs stricter environment/profile validation, including positive finite timeout checks, executor-specific numeric validation, stage-shape validation, and thresholds shape validation.
+- **`summary.js`** now uses local vendored modules and persists a slim `summary.json` by default; set `EURIPID_WRITE_FULL_SUMMARY=true` to write the full raw k6 payload.
+- **`LoginPage.loginAs()`** now waits for all interacted controls and avoids assuming a post-submit full page load, making the login path more reliable for SPA/XHR flows.
+- **`assertText()`** now shares a single timeout budget between waiting for visibility and reading text content.
+- **`BasePage.screenshot()`** now falls back to a local file when direct `k6 run` usage has no pre-created screenshots directory.
+- **`transactions.js`** now reserves `transaction_duration` for outer `withTransaction()` wrappers so nested typed steps do not double-count aggregate timing.
+- **`logging.js`** now coerces invalid log levels to `error` and reports the misconfiguration in the emitted error payload instead of throwing on the error path.
+
+### Fixed
+- **`browser-login` scenario** now records data-stage failures through `data_errors`, preventing dashboards from conflating missing CSV rows with in-flow failures.
+- **`NOTICE`** now reflects the vendored helper strategy instead of promising future vendoring.
+
+---
+
 ## [1.1.0] - 2026-04-08
 
 ### Added
@@ -21,11 +42,6 @@ All notable changes to Euripid. Format loosely follows Keep a Changelog.
 - **`NOTICE`** — corrected stale claim that external imports were "unpinned"; all three have been version-pinned since v1.0.5.
 - **`config.js` `validateEnvironment`** — added a type guard for the `timeouts` field so `"timeouts": null` produces a clear validation error instead of an unhandled `TypeError`.
 - **`data.js`** — added the same `CONTRACT` path-prefix warning as `config.js` so the `../../` anchor is documented for future maintainers.
-
-### Removed (from known-limitations)
-- "Version hardcoded in multiple places" — `run.ps1` now reads `VERSION`.
-
----
 
 ## [1.0.5] - 2026-04-07
 

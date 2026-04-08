@@ -8,11 +8,11 @@ export const loginDuration = new Trend('flow_login_duration', true);
 export const flowDuration = new Trend('flow_total_duration', true);
 
 export const flowErrors = new Counter('flow_errors');
+export const dataErrors = new Counter('data_errors');
 
 /**
  * Per-transaction duration (tag: `transaction`). Shows in HTML/JSON summary as a custom Trend;
- * pairs with k6 `group()` timings for the same names. All typed helpers also record here
- * so this Trend is a unified view of every timed step.
+ * pairs with outer k6 journey groups that use withTransaction().
  */
 export const transactionDuration = new Trend('transaction_duration', true);
 

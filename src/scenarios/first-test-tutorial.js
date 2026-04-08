@@ -67,9 +67,14 @@ import { environment, buildOptions } from '../lib/config.js';
 import { handleSummary as makeSummary } from '../lib/summary.js';
 
 // withTransaction(name, fn) wraps k6 group() + a tagged transaction_duration
-// metric so the HTML report shows both nested timings and a Trend per step.
+// metric for outer journey timing.
 
-import { withTransaction } from '../lib/transactions.js';
+import {
+  withTransaction,
+  withNavigation,
+  withPageLoad,
+  withUserAction,
+} from '../lib/transactions.js';
 
 // Structured error lines (EURIPID_ERROR JSON) + scenario_errors counter.
 
@@ -111,17 +116,17 @@ export default async function () {
 
   try {
     // =========================================================================
-    // SECTION 4 — User journey modeled as nested transactions
+    // SECTION 4 — User journey modeled as an outer transaction plus typed steps
     // =========================================================================
     // Outer transaction = whole story (one group in the report).
-    // Inner transactions = named steps a product owner would recognise.
+    // Inner typed steps = named actions/load waits a product owner would recognise.
 
     await withTransaction('tutorial_acme_pizza_journey', async () => {
       // --- Step A: Navigate to the app root -----------------------------------
       // environment.baseUrl comes from config/environments/example-tutorial.json.
       // Replace that file's baseUrl when your real app is ready.
 
-      await withTransaction('step_open_homepage', async () => {
+      await withNavigation('step_open_homepage', async () => {
         await page.goto(environment.baseUrl, {
           // 'load' waits for the load event. 'networkidle' is stricter but can
           // flake on SPAs with long-polling — start with 'load' or 'domcontentloaded'.
@@ -145,7 +150,7 @@ export default async function () {
       //   - Returns true/false
       //   - With { failFast: true }, throws immediately on failure
 
-      await withTransaction('step_assert_page_ready', async () => {
+      await withPageLoad('step_assert_page_ready', async () => {
         // 1) Assert the page body rendered — uses the global assertion timeout
         //    from env.timeouts.assertion (10 s in example-tutorial.json).
         await assertVisible(
@@ -193,7 +198,7 @@ export default async function () {
       // The error is caught in the outer catch, logged via logScenarioError,
       // and the iteration stops. Use this for critical gates like "login succeeded".
       //
-      // await withTransaction('step_critical_element', async () => {
+      // await withPageLoad('step_critical_element', async () => {
       //   await assertVisible(
       //     page,
       //     '[data-testid="critical-widget"]',
@@ -206,7 +211,7 @@ export default async function () {
       // --- Step D (extension hook): click something on the real app -----------
       // Uncomment and adapt when you have a stable selector on YOUR site:
       //
-      // await withTransaction('step_open_menu', async () => {
+      // await withUserAction('step_open_menu', async () => {
       //   const menuSelector = '[data-testid="main-menu"]';
       //   await assertVisible(page, menuSelector, 'menu button visible', environment);
       //   await page.locator(menuSelector).click();

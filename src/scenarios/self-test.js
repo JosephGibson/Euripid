@@ -17,7 +17,7 @@ import { browser } from 'k6/browser';
 import { check } from 'k6';
 import { environment, buildOptions } from '../lib/config.js';
 import { handleSummary as makeSummary } from '../lib/summary.js';
-import { withTransaction } from '../lib/transactions.js';
+import { withTransaction, withNavigation, withPageLoad } from '../lib/transactions.js';
 import { logScenarioError } from '../lib/logging.js';
 import { assertVisible } from '../lib/assertions.js';
 
@@ -27,13 +27,13 @@ export default async function () {
   const page = await browser.newPage();
   try {
     await withTransaction('journey_self_test', async () => {
-      await withTransaction('navigate_demo', async () => {
+      await withNavigation('navigate_demo', async () => {
         await page.goto(environment.baseUrl, {
           waitUntil: 'load',
           timeout: environment.timeouts.navigation,
         });
       });
-      await withTransaction('verify_page_loaded', async () => {
+      await withPageLoad('verify_page_loaded', async () => {
         // assertVisible waits for the element up to the assertion timeout
         // (env.timeouts.assertion) before recording a check.
         await assertVisible(page, 'body', 'page body is visible', environment);

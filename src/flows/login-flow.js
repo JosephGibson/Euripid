@@ -1,12 +1,18 @@
 // src/flows/login-flow.js
 // Composed user journey: open login page, authenticate, land on dashboard.
-// Transactions are wrapped with withTransaction() for group + transaction_duration metrics.
+// The outer journey uses withTransaction(); inner steps use typed helpers so
+// transaction_duration remains an unduplicated outer-flow metric.
 // Element assertions use the configurable timeout hierarchy (per-call > env > fallback).
 
 import { LoginPage } from '../pages/LoginPage.js';
 import { DashboardPage } from '../pages/DashboardPage.js';
 import { loginDuration, flowDuration, flowErrors } from '../lib/metrics.js';
-import { withTransaction } from '../lib/transactions.js';
+import {
+  withTransaction,
+  withNavigation,
+  withUserAction,
+  withPageLoad,
+} from '../lib/transactions.js';
 import { logScenarioError } from '../lib/logging.js';
 import { assertVisible } from '../lib/assertions.js';
 
@@ -25,17 +31,17 @@ export async function runLoginFlow(page, env, user, ctx = {}) {
 
   try {
     await withTransaction('journey_login', async () => {
-      await withTransaction('open_login_page', async () => {
+      await withNavigation('open_login_page', async () => {
         await loginPage.open();
       });
 
-      await withTransaction('submit_credentials', async () => {
+      await withUserAction('submit_credentials', async () => {
         const loginStart = Date.now();
         await loginPage.loginAs(user);
         loginDuration.add(Date.now() - loginStart);
       });
 
-      await withTransaction('verify_session', async () => {
+      await withPageLoad('verify_session', async () => {
         // assertVisible waits up to the assertion timeout, records a k6 check,
         // and throws immediately on failure (failFast) so we don't waste time
         // on the dashboard step after a failed login.
@@ -48,7 +54,7 @@ export async function runLoginFlow(page, env, user, ctx = {}) {
         );
       });
 
-      await withTransaction('dashboard_ready', async () => {
+      await withPageLoad('dashboard_ready', async () => {
         await dashboard.waitForLoad();
       });
     });

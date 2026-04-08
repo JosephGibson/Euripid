@@ -23,11 +23,11 @@ export class SearchPage extends BasePage {
   async search(term, opts = {}) {
     const s = SearchPage.SELECTORS;
     const fieldTimeout = this.resolveTimeout('assertion', opts.timeout);
-    // Wait for the input to render before typing — fails with a clear
-    // timeout instead of a silent locator error on slow pages.
+    const actionTimeout = this.resolveTimeout('action', opts.timeout);
     await this.page.locator(s.input).waitFor({ state: 'visible', timeout: fieldTimeout });
-    await this.page.locator(s.input).type(term);
-    await this.page.locator(s.submit).click();
+    await this.page.locator(s.submit).waitFor({ state: 'visible', timeout: fieldTimeout });
+    await this.page.locator(s.input).type(term, { timeout: actionTimeout });
+    await this.page.locator(s.submit).click({ timeout: actionTimeout });
     await this.waitForReady(s.result, opts);
   }
 
@@ -37,7 +37,7 @@ export class SearchPage extends BasePage {
 }
 ```
 
-**Rules:** extend `BasePage`, keep selectors in a static `SELECTORS` map, action methods are async. Use `this.resolveTimeout(kind, override)` for configurable waits (per-call > env > fallback). Never reference `__ENV` or `__VU` from a page (those belong to scenarios and `BasePage`).
+**Rules:** extend `BasePage`, keep selectors in a static `SELECTORS` map, action methods are async. Wait for every field or control you interact with before typing/clicking. Use `this.resolveTimeout(kind, override)` for configurable waits (per-call > env > fallback). Never reference `__ENV` or `__VU` from a page (those belong to scenarios and `BasePage`).
 
 ---
 
@@ -52,7 +52,7 @@ import { check } from 'k6';
 import { LoginPage } from '../pages/LoginPage.js';
 import { SearchPage } from '../pages/SearchPage.js';
 import { flowDuration, flowErrors } from '../lib/metrics.js';
-import { withTransaction } from '../lib/transactions.js';
+import { withTransaction, withNavigation, withUserAction, withPageLoad } from '../lib/transactions.js';
 import { logScenarioError } from '../lib/logging.js';
 import { assertVisible } from '../lib/assertions.js';
 
@@ -63,13 +63,17 @@ export async function runSearchFlow(page, env, user, term, ctx = {}) {
   const search = new SearchPage(page, env);
   try {
     await withTransaction('journey_search', async () => {
-      await withTransaction('login', async () => {
+      await withNavigation('login', async () => {
         await login.open();
+      });
+      await withUserAction('submit_credentials', async () => {
         await login.loginAs(user);
+      });
+      await withPageLoad('login_ready', async () => {
         await assertVisible(page, LoginPage.SELECTORS.loggedInMarker,
           'user is logged in', env, { failFast: true });
       });
-      await withTransaction('search', async () => {
+      await withPageLoad('search', async () => {
         await search.search(term);
         const count = await search.resultCount();
         check(count, { 'has results': (n) => n > 0 });
@@ -86,7 +90,7 @@ export async function runSearchFlow(page, env, user, term, ctx = {}) {
 }
 ```
 
-**Rules:** wrap in `withTransaction` for HTML report timings; record duration via `metrics.js` in `finally`; log failures with `logScenarioError`; use `assertVisible` with `failFast` for critical gates (e.g. login); screenshot on failure (best-effort).
+**Rules:** wrap the outer journey in `withTransaction`, then use typed helpers for child steps (`withNavigation`, `withUserAction`, `withPageLoad`) so reports stay readable without double-counting nested timings. Record duration via `metrics.js` in `finally`; log failures with `logScenarioError`; use `assertVisible` with `failFast` for critical gates (e.g. login); screenshot on failure (best-effort).
 
 ---
 
@@ -144,7 +148,7 @@ export const handleSummary = makeSummary;
 }
 ```
 
-**Required fields** (validated at init by `config.js`): `name`, `baseUrl`, `timeouts.navigation`, `timeouts.action`. Optional: `timeouts.assertion` (default 10 000 ms) — global timeout for element assertion waits. Add other fields freely; they'll be available on `environment` in any flow or page.
+**Required fields** (validated at init by `config.js`): `name`, `baseUrl`, `timeouts.navigation`, `timeouts.action`. Timeouts must be positive finite numbers. Optional: `timeouts.assertion` (default 10 000 ms) — global timeout for element assertion waits. Add other fields freely; they'll be available on `environment` in any flow or page.
 
 ---
 
@@ -152,7 +156,7 @@ export const handleSummary = makeSummary;
 
 **Where:** `config/profiles/<n>.json`
 
-`config.js` validates the profile against the executor's required fields. Supported executors and required fields:
+`config.js` validates the profile against the executor's required fields and common value shapes. Supported executors and required fields:
 
 | Executor                | Required fields                                            |
 |-------------------------|------------------------------------------------------------|
@@ -194,7 +198,7 @@ export const handleSummary = makeSummary;
 }
 ```
 
-**Rules:** if you add a new executor, extend `REQUIRED_BY_EXECUTOR` and the `passthrough` list in `src/lib/config.js`. Don't put env-specific URLs in profiles — that's what environments are for.
+**Rules:** integer fields such as `vus`, `iterations`, `preAllocatedVUs`, and `maxVUs` must be positive integers; `startVUs` and stage `target` values must be non-negative integers; `stages` must be a non-empty array with `duration` + `target`. If you add a new executor, extend `REQUIRED_BY_EXECUTOR` and the `passthrough` list in `src/lib/config.js`. Don't put env-specific URLs in profiles — that's what environments are for.
 
 ---
 
@@ -207,7 +211,7 @@ column1,column2,column3
 value1,value2,value3
 ```
 
-**Rules:** header row required (parsed by `papaparse` with `header: true`). Run with `-DataFile <n>.csv`. To use it from a scenario, the existing `rowForVU()` helper picks up whatever `DATA_FILE` env var was passed — no code change needed unless you need multiple datasets in one scenario (extend `data.js` in that case).
+**Rules:** header row required (parsed by the vendored CSV helper with `header: true` semantics). Run with `-DataFile <n>.csv`. To use it from a scenario, the existing `rowForVU()` helper picks up whatever `DATA_FILE` env var was passed — no code change needed unless you need multiple datasets in one scenario (extend `data.js` in that case).
 
 ---
 
@@ -235,10 +239,10 @@ Four helpers, from general to specific:
 
 | Helper | Metric rows in HTML report | Use for |
 |--------|---------------------------|---------|
-| `withTransaction` | `transaction_duration` | Catch-all / outer journey wrapper |
-| `withNavigation` | `navigation_duration` + `transaction_duration` | `page.goto`, `page.waitForNavigation` |
-| `withUserAction` | `user_action_duration` + `transaction_duration` | Clicks, typing, form submits, keyboard |
-| `withPageLoad` | `page_load_duration` + `transaction_duration` | Asserting elements visible after an action |
+| `withTransaction` | `transaction_duration` | Outer journey wrapper |
+| `withNavigation` | `navigation_duration` | `page.goto`, `page.waitForNavigation` |
+| `withUserAction` | `user_action_duration` | Clicks, typing, form submits, keyboard |
+| `withPageLoad` | `page_load_duration` | Asserting elements visible after an action |
 
 Every helper wraps `group()`, so the HTML report shows a **collapsible group tree** (journey > steps) alongside **per-type metric rows** with p95/avg/min/max.
 
@@ -251,7 +255,7 @@ withTransaction('journey_checkout', ...)       ← outer group in report
   withPageLoad('confirmation_visible', ...)    ← nested group + page_load_duration row
 ```
 
-All four also record `transaction_duration`, so that single Trend is always a unified view of every timed step — useful for a "total step time" threshold.
+Use `transaction_duration` for outer journey timing only. Typed helpers intentionally do **not** also record there, which keeps the outer journey metric free of nested double-counting.
 
 ### Recording a navigation (page.goto, full-page load)
 
@@ -330,7 +334,7 @@ Open `results/<runId>/summary.html` in a browser. Key sections to check:
 1. **Thresholds (top)** — red/green pass/fail for each threshold in your profile JSON. If any are red, k6 exited non-zero.
 2. **Checks** — pass/fail counts for every `check()` and `assertVisible`/`assertText`/`assertHidden` call.
 3. **Groups** — expand the tree to see per-step timings. Group names match your `withTransaction` / `withNavigation` / `withUserAction` / `withPageLoad` names.
-4. **Custom metrics** — scroll to `navigation_duration`, `user_action_duration`, `page_load_duration` for per-type aggregates. `transaction_duration` is the unified view.
+4. **Custom metrics** — scroll to `navigation_duration`, `user_action_duration`, `page_load_duration` for per-type aggregates. `transaction_duration` tracks outer journey wrappers.
 5. **Browser Web Vitals** — `browser_web_vital_lcp`, `browser_web_vital_fcp`, etc. are collected automatically by k6/browser with no extra code.
 
 ### Using the JSON summary in CI
@@ -345,6 +349,8 @@ if (( $(echo "$p95 > 3000" | bc -l) )); then
   exit 1
 fi
 ```
+
+`summary.json` is slim by default so large runs do not persist the entire raw k6 object. Set `EURIPID_WRITE_FULL_SUMMARY=true` if you need the full raw payload.
 
 Or use k6's built-in threshold mechanism in the profile JSON — k6 checks them automatically and exits non-zero on failure:
 
@@ -386,7 +392,7 @@ The metric shows up as `flow_checkout_duration` in the HTML report with avg/min/
 
 **Where:** environment JSON optional `logging` block; orchestrator flags `-LogLevel`, `-DisableScenarioErrorLog`, `-IncludeUserContextInLogs`; or k6 `-e EURIPID_LOG_SCENARIO_ERRORS=false`.
 
-Failures call `logScenarioError(env, { scenario, phase, err, user })` from `src/lib/logging.js`, increment **`scenario_errors`**, and print one `EURIPID_ERROR {...}` JSON line to stderr (captured in `k6-console.log`). Password fields from CSV are never included; `includeUserContext` allows username/role hints only.
+Failures call `logScenarioError(env, { scenario, phase, err, user })` from `src/lib/logging.js`, increment **`scenario_errors`**, and print one `EURIPID_ERROR {...}` JSON line to stderr (captured in `k6-console.log`). Invalid logging levels are coerced to `error` and surfaced in the payload instead of crashing the error path. Password fields from CSV are never included; `includeUserContext` allows username/role hints only.
 
 ---
 
@@ -398,6 +404,8 @@ Failures call `logScenarioError(env, { scenario, phase, err, user })` from `src/
 1. Per-call `opts.timeout`
 2. `env.timeouts.assertion` (from environment JSON)
 3. Built-in fallback: 10 000 ms
+
+`assertText()` shares a single timeout budget across both the wait and the final text read, so a `10 000 ms` timeout really means `10 000 ms` total, not twice that.
 
 ```js
 import { assertVisible, assertText, assertHidden } from '../lib/assertions.js';

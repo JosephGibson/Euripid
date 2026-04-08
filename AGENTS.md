@@ -4,11 +4,11 @@ Entry point for AI/LLM agents working on Euripid. Read this first; it links out 
 
 ## What this repo is
 
-**Euripid v1.1** — a k6 + `k6/browser` performance testing template. Browser-level perf flows are written as Page Objects, composed into flows, exposed as k6 scenario entry points, and orchestrated by a PowerShell script that packages every run into a timestamped zip. Consumed as a clone-and-modify template, not a dependency.
+**Euripid v1.2** — a k6 + `k6/browser` performance testing template. Browser-level perf flows are written as Page Objects, composed into flows, exposed as k6 scenario entry points, and orchestrated by a PowerShell script that packages every run into a timestamped zip. Consumed as a clone-and-modify template, not a dependency.
 
 **Not Playwright.** k6 runs JS on Goja, not Node — the npm `playwright` package cannot be imported. `k6/browser` is a Chromium automation API with Playwright-shaped semantics. When in doubt, prefer k6 docs over Playwright docs.
 
-**Status:** v1.1 released. Adds typed transaction helpers (`withNavigation`, `withUserAction`, `withPageLoad`) for the HTML report, orchestrator improvements, and bug fixes. See `CHANGELOG.md` for the full scope.
+**Status:** v1.2 released. Adds local vendored runtime helpers, stricter validation, safer summary handling, and more reliable browser-flow behavior. See `CHANGELOG.md` for the full scope.
 
 ## Mental model (read this once)
 
@@ -89,7 +89,6 @@ This hits `quickpizza.grafana.com` (k6's public demo) and verifies the entire to
 
 ## Known limitations
 
-- External imports (`papaparse`, `k6-summary`, `k6-reporter`) are loaded from version-pinned upstream URLs. Full vendoring (local copies) is planned for a future release.
 - No `run.sh`. Bash orchestrator is planned for a future release.
 - No CI workflow. Add when the consuming team has a target.
 - No multi-scenario runs.
@@ -104,4 +103,4 @@ When asked to extend or modify this library:
 1. Confirm which constraint(s) above the change touches before writing code.
 2. Read the relevant per-directory README and `docs/RECIPES.md` section.
 3. Keep the existing patterns — new pages look like `LoginPage`, new scenarios look like `browser-login.js`, etc. Consistency is the point.
-4. If a request would break a constraint or a known v1.0 limitation, surface the conflict before complying.
+4. If a request would break a constraint or a known limitation listed above, surface the conflict before complying.
