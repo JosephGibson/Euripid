@@ -31,9 +31,16 @@ export class BasePage {
    * @returns {number}
    */
   resolveTimeout(kind, override) {
-    if (typeof override === 'number' && override > 0) return override;
+    if (typeof override === 'number' && Number.isFinite(override) && override > 0) return override;
     const t = this.env.timeouts;
-    if (t && typeof t[kind] === 'number') return t[kind];
+    const configuredTimeout = t ? t[kind] : undefined;
+    if (
+      typeof configuredTimeout === 'number' &&
+      Number.isFinite(configuredTimeout) &&
+      configuredTimeout > 0
+    ) {
+      return configuredTimeout;
+    }
     return TIMEOUT_DEFAULTS[kind] || TIMEOUT_DEFAULTS.assertion;
   }
 
@@ -46,9 +53,21 @@ export class BasePage {
   }
 
   async screenshot(name) {
-    await this.page.screenshot({
-      path: `${SCREENSHOT_DIR}/${name}-vu${__VU}-${Date.now()}.png`,
-    });
+    const fileName = `${name}-vu${__VU}-${Date.now()}.png`;
+    try {
+      await this.page.screenshot({
+        path: `${SCREENSHOT_DIR}/${fileName}`,
+      });
+    } catch (err) {
+      if (__ENV.RUN_OUTPUT_DIR) {
+        throw err;
+      }
+      // Direct k6 runs may not have a pre-created screenshots/ directory.
+      // Fall back to the current working directory so failure evidence is not lost.
+      await this.page.screenshot({
+        path: `results-${fileName}`,
+      });
+    }
   }
 
   /**

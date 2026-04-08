@@ -7,12 +7,13 @@
 // If you move this file, update the prefix in the open() call accordingly.
 
 import { SharedArray } from 'k6/data';
-import papaparse from 'https://jslib.k6.io/papaparse/5.1.1/index.js';
+import papaparse from '../vendor/papaparse.js';
 
+const ROOT_PREFIX = '../../';
 const DATA_FILE = __ENV.DATA_FILE || 'data/users.csv';
 
 export const dataset = new SharedArray('csv-dataset', function () {
-  const csv = open('../../' + DATA_FILE);
+  const csv = open(ROOT_PREFIX + DATA_FILE);
   return papaparse.parse(csv, { header: true, skipEmptyLines: true }).data;
 });
 

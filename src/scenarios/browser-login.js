@@ -12,6 +12,7 @@ import { rowForVU } from '../lib/data.js';
 import { runLoginFlow } from '../flows/login-flow.js';
 import { handleSummary as makeSummary } from '../lib/summary.js';
 import { logScenarioError } from '../lib/logging.js';
+import { dataErrors } from '../lib/metrics.js';
 
 export const options = buildOptions('browser_login');
 
@@ -22,6 +23,7 @@ export default async function () {
     try {
       user = rowForVU();
     } catch (err) {
+      dataErrors.add(1);
       logScenarioError(environment, {
         scenario: 'browser_login',
         phase: 'data',

@@ -15,7 +15,7 @@
 //     navigation_duration    — p95/avg/min/max across all withNavigation calls
 //     user_action_duration   — p95/avg/min/max across all withUserAction calls
 //     page_load_duration     — p95/avg/min/max across all withPageLoad calls
-//     transaction_duration   — unified view of every timed step
+//     transaction_duration   — outer journey timing only
 //
 // Run via:
 //   ./scripts/run.ps1 -Scenario google-example -Environment google-example -Profile smoke
@@ -45,7 +45,7 @@ export default async function () {
     await withTransaction('journey_google_search', async () => {
 
       // --- NAVIGATION: full-page load to Google homepage -----------------------
-      // withNavigation records navigation_duration + transaction_duration.
+      // withNavigation records navigation_duration.
       // Use for: page.goto, page.waitForNavigation, any full-page transition.
       await withNavigation('navigate_to_google', async () => {
         await page.goto(environment.baseUrl, {
@@ -55,7 +55,7 @@ export default async function () {
       });
 
       // --- PAGE LOAD: wait for the page to settle after navigation -------------
-      // withPageLoad records page_load_duration + transaction_duration.
+      // withPageLoad records page_load_duration.
       // Use for: asserting elements are visible/ready after a navigation or action.
       await withPageLoad('homepage_ready', async () => {
         await assertVisible(
@@ -73,7 +73,7 @@ export default async function () {
       });
 
       // --- USER ACTION: type a query into the search box -----------------------
-      // withUserAction records user_action_duration + transaction_duration.
+      // withUserAction records user_action_duration.
       // Use for: clicks, keyboard input, form fills, drag-and-drop.
       await withUserAction('type_search_query', async () => {
         const searchBox = page.locator('textarea[name="q"], input[name="q"]');

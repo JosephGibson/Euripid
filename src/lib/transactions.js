@@ -8,8 +8,9 @@
 //   withUserAction   — click, type, submit, keyboard (+ user_action_duration)
 //   withPageLoad     — post-action settling / assertions (+ page_load_duration)
 //
-// The typed helpers record to BOTH the typed Trend AND transaction_duration so
-// you always have a single unified view in addition to the per-type breakdown.
+// `withTransaction()` is reserved for outer journey wrappers. Typed helpers emit
+// only their own per-type Trends so transaction_duration does not double-count
+// nested steps.
 
 import { group } from 'k6';
 import {
@@ -39,7 +40,7 @@ export async function withTransaction(name, fn) {
 
 /**
  * Time a browser navigation (page.goto, waitForNavigation, full-page load).
- * Records `navigation_duration` and `transaction_duration`.
+ * Records `navigation_duration`.
  *
  * @param {string} name e.g. 'navigate_to_login', 'search_results_loaded'
  * @param {() => Promise<unknown>} fn
@@ -51,7 +52,6 @@ export async function withNavigation(name, fn) {
       return await fn();
     } finally {
       const elapsed = Date.now() - t0;
-      transactionDuration.add(elapsed, { transaction: name });
       navigationDuration.add(elapsed, { transaction: name });
     }
   });
@@ -59,7 +59,7 @@ export async function withNavigation(name, fn) {
 
 /**
  * Time a user interaction (click, type, form submit, keyboard shortcut).
- * Records `user_action_duration` and `transaction_duration`.
+ * Records `user_action_duration`.
  *
  * @param {string} name e.g. 'click_submit', 'type_search_query'
  * @param {() => Promise<unknown>} fn
@@ -71,7 +71,6 @@ export async function withUserAction(name, fn) {
       return await fn();
     } finally {
       const elapsed = Date.now() - t0;
-      transactionDuration.add(elapsed, { transaction: name });
       userActionDuration.add(elapsed, { transaction: name });
     }
   });
@@ -79,7 +78,7 @@ export async function withUserAction(name, fn) {
 
 /**
  * Time a page-load / settling wait (element appears, spinner gone, data renders).
- * Records `page_load_duration` and `transaction_duration`.
+ * Records `page_load_duration`.
  *
  * @param {string} name e.g. 'dashboard_ready', 'results_rendered'
  * @param {() => Promise<unknown>} fn
@@ -91,7 +90,6 @@ export async function withPageLoad(name, fn) {
       return await fn();
     } finally {
       const elapsed = Date.now() - t0;
-      transactionDuration.add(elapsed, { transaction: name });
       pageLoadDuration.add(elapsed, { transaction: name });
     }
   });

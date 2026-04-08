@@ -17,13 +17,13 @@ function envBool(raw, defaultVal) {
 export function resolveLoggingConfig(env) {
   const L = env.logging || {};
   const allowed = ['error', 'warn', 'info', 'debug'];
-  const level = (__ENV.EURIPID_LOG_LEVEL || L.level || 'error').toLowerCase();
-  if (!allowed.includes(level)) {
-    throw new Error(`Invalid logging.level '${level}' (use error|warn|info|debug)`);
-  }
+  const rawLevel = (__ENV.EURIPID_LOG_LEVEL || L.level || 'error').toLowerCase();
+  const invalidLevel = !allowed.includes(rawLevel) ? rawLevel : null;
+  const level = invalidLevel ? 'error' : rawLevel;
   return {
     /** Reserved for future verbose / non-error log lines. */
     level,
+    invalidLevel,
     logScenarioErrors: envBool(__ENV.EURIPID_LOG_SCENARIO_ERRORS, L.logScenarioErrors !== false),
     includeStack: envBool(__ENV.EURIPID_INCLUDE_STACK, L.includeStack !== false),
     /** When true, include non-secret user hints (e.g. role) in error payloads. Never logs passwords. */
@@ -82,6 +82,10 @@ export function logScenarioError(env, ctx) {
   const hint = userHint(ctx.user, cfg);
   if (hint) {
     payload.user = hint;
+  }
+
+  if (cfg.invalidLevel) {
+    payload.logging_warning = `Invalid logging.level '${cfg.invalidLevel}' resolved as 'error'`;
   }
 
   console.error(`EURIPID_ERROR ${JSON.stringify(payload)}`);

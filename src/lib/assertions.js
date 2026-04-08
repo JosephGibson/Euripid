@@ -21,9 +21,14 @@ const FALLBACK_ASSERTION_TIMEOUT_MS = 10000;
  * @returns {number}
  */
 export function resolveAssertionTimeout(env, override) {
-  if (typeof override === 'number' && override > 0) return override;
-  if (env && env.timeouts && typeof env.timeouts.assertion === 'number') {
-    return env.timeouts.assertion;
+  if (typeof override === 'number' && Number.isFinite(override) && override > 0) return override;
+  const configuredTimeout = env && env.timeouts ? env.timeouts.assertion : undefined;
+  if (
+    typeof configuredTimeout === 'number' &&
+    Number.isFinite(configuredTimeout) &&
+    configuredTimeout > 0
+  ) {
+    return configuredTimeout;
   }
   return FALLBACK_ASSERTION_TIMEOUT_MS;
 }
@@ -95,11 +100,13 @@ export async function assertText(page, selector, predicate, checkName, env, opts
   const timeout = resolveAssertionTimeout(env, opts.timeout);
   const state = opts.state || 'visible';
   const failFast = opts.failFast === true;
+  const deadline = Date.now() + timeout;
 
   let text = null;
   try {
     await page.locator(selector).waitFor({ state, timeout });
-    text = await page.locator(selector).textContent({ timeout });
+    const remaining = Math.max(1, deadline - Date.now());
+    text = await page.locator(selector).textContent({ timeout: remaining });
   } catch (_) {
     // Element didn't appear or text couldn't be read within timeout.
   }

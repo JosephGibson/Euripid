@@ -7,7 +7,7 @@
     and packages every run into a timestamped zip with config snapshot,
     summary HTML/JSON, screenshots, console output, and a structured log file.
 
-    v1.0 is Windows-first. Written in cross-OS pwsh (works on Linux/macOS too).
+    Written in cross-OS pwsh (works on Windows, Linux, and macOS).
 
 .PARAMETER Scenario
     Scenario file under src/scenarios/ (without .js). Required.
