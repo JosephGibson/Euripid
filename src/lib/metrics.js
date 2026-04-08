@@ -11,8 +11,7 @@ export const flowErrors = new Counter('flow_errors');
 export const dataErrors = new Counter('data_errors');
 
 /**
- * Per-transaction duration (tag: `transaction`). Shows in HTML/JSON summary as a custom Trend;
- * pairs with outer k6 journey groups that use withTransaction().
+ * Per-transaction duration (tag: `transaction`). Shows in HTML/JSON summary as a custom Trend.
  */
 export const transactionDuration = new Trend('transaction_duration', true);
 

@@ -19,7 +19,7 @@ src/lib/  →  init-context infrastructure
             ├ config.js      reads env+profile JSON, validates, builds k6 options
             ├ data.js        SharedArray-backed CSV loader, rowForVU()
             ├ metrics.js     custom Trends and Counters
-            ├ transactions.js  withTransaction/Navigation/UserAction/PageLoad — k6 group + typed Trends
+            ├ transactions.js  withTransaction/Navigation/UserAction/PageLoad — tagged Trend timings (no k6 group(); async-safe)
             ├ assertions.js  assertVisible/Text/Hidden — configurable-timeout element checks
             ├ logging.js     structured EURIPID_ERROR lines + scenario_errors counter
             └ summary.js     shared handleSummary that respects RUN_OUTPUT_DIR

@@ -244,15 +244,15 @@ Four helpers, from general to specific:
 | `withUserAction` | `user_action_duration` | Clicks, typing, form submits, keyboard |
 | `withPageLoad` | `page_load_duration` | Asserting elements visible after an action |
 
-Every helper wraps `group()`, so the HTML report shows a **collapsible group tree** (journey > steps) alongside **per-type metric rows** with p95/avg/min/max.
+Helpers do **not** call k6 `group()`. k6 forbids async functions as `group()` callbacks, and browser scenarios are async. Step structure instead appears as **tagged Trend samples**: each helper passes your `name` as the `transaction` tag on the relevant metric (`transaction_duration`, `navigation_duration`, `user_action_duration`, or `page_load_duration`). The HTML report lists those metrics with p95/avg/min/max; filter or chart by tag in external tools when you need per-step breakdowns.
 
-### How groups map to the report
+### How helpers map to metrics
 
 ```
-withTransaction('journey_checkout', ...)       ← outer group in report
-  withNavigation('open_cart', ...)             ← nested group + navigation_duration row
-  withUserAction('click_pay', ...)             ← nested group + user_action_duration row
-  withPageLoad('confirmation_visible', ...)    ← nested group + page_load_duration row
+withTransaction('journey_checkout', ...)       ← transaction_duration{transaction:journey_checkout}
+  withNavigation('open_cart', ...)             ← navigation_duration{transaction:open_cart}
+  withUserAction('click_pay', ...)             ← user_action_duration{transaction:click_pay}
+  withPageLoad('confirmation_visible', ...)    ← page_load_duration{transaction:confirmation_visible}
 ```
 
 Use `transaction_duration` for outer journey timing only. Typed helpers intentionally do **not** also record there, which keeps the outer journey metric free of nested double-counting.

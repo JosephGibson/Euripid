@@ -66,7 +66,7 @@ import { environment, buildOptions } from '../lib/config.js';
 
 import { handleSummary as makeSummary } from '../lib/summary.js';
 
-// withTransaction(name, fn) wraps k6 group() + a tagged transaction_duration
+// withTransaction(name, fn) records a tagged transaction_duration Trend (async-safe; no k6 group())
 // metric for outer journey timing.
 
 import {

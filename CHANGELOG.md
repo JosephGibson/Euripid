@@ -14,7 +14,7 @@ All notable changes to Euripid. Format loosely follows Keep a Changelog.
 - **`LoginPage.loginAs()`** now waits for all interacted controls and avoids assuming a post-submit full page load, making the login path more reliable for SPA/XHR flows.
 - **`assertText()`** now shares a single timeout budget between waiting for visibility and reading text content.
 - **`BasePage.screenshot()`** now falls back to a local file when direct `k6 run` usage has no pre-created screenshots directory.
-- **`transactions.js`** now reserves `transaction_duration` for outer `withTransaction()` wrappers so nested typed steps do not double-count aggregate timing.
+- **`transactions.js`** now reserves `transaction_duration` for outer `withTransaction()` wrappers so nested typed steps do not double-count aggregate timing. Transaction helpers no longer call k6 `group()` (async `group()` callbacks are rejected); step structure is reflected via tagged Trend metrics only. `docs/RECIPES.md`, `docs/USAGE.md`, and related READMEs updated.
 - **`logging.js`** now coerces invalid log levels to `error` and reports the misconfiguration in the emitted error payload instead of throwing on the error path.
 
 ### Fixed
@@ -26,10 +26,10 @@ All notable changes to Euripid. Format loosely follows Keep a Changelog.
 ## [1.1.0] - 2026-04-08
 
 ### Added
-- **Typed transaction helpers** (`src/lib/transactions.js`): `withNavigation`, `withUserAction`, `withPageLoad` — purpose-specific wrappers around `group()` that record to dedicated Trend metrics (`navigation_duration`, `user_action_duration`, `page_load_duration`) in addition to the unified `transaction_duration`. Each type gets its own row in the k6 HTML report.
+- **Typed transaction helpers** (`src/lib/transactions.js`): `withNavigation`, `withUserAction`, `withPageLoad` — purpose-specific wrappers that record to dedicated Trend metrics (`navigation_duration`, `user_action_duration`, `page_load_duration`) in addition to the unified `transaction_duration`. (As of v1.2.0, helpers no longer use k6 `group()` because async `group()` bodies are unsupported.) Each type gets its own row in the k6 HTML report.
 - **Typed Trend metrics** (`src/lib/metrics.js`): `navigationDuration`, `userActionDuration`, `pageLoadDuration` — separate metric rows in the HTML/JSON summary for navigations, user interactions, and post-action page-load waits.
 - **`google-example` scenario** (`src/scenarios/google-example.js`) with environment (`config/environments/google-example.json`) — demonstrates all four transaction helpers against Google.com: navigation, page-load assertions, typing, and form submission.
-- **HTML report recipe** (`docs/RECIPES.md`): "Transactions and the HTML report" section with examples for each helper type, threshold configuration, and how groups map to the report structure.
+- **HTML report recipe** (`docs/RECIPES.md`): "Transactions and the HTML report" section with examples for each helper type, threshold configuration, and how metrics map to the report.
 
 ### Changed
 - **`summary.js`** now passes a dynamic report title to `k6-reporter` derived from the environment filename (e.g. "Euripid — staging").
@@ -77,7 +77,7 @@ All notable changes to Euripid. Format loosely follows Keep a Changelog.
 ## [1.0.2] - 2026-04-07
 
 ### Added
-- **Transaction timing:** `src/lib/transactions.js` with `withTransaction()` combines k6 `group()` (nested timings in summary/HTML) and a tagged `transaction_duration` Trend. Example flows (`login-flow`, `self-test`) wrap user journeys and steps.
+- **Transaction timing:** `src/lib/transactions.js` with `withTransaction()` records a tagged `transaction_duration` Trend (and typed helpers record their own Trends). Example flows (`login-flow`, `self-test`) wrap user journeys and steps.
 - **Error logging:** `src/lib/logging.js` with `logScenarioError()` — increments `scenario_errors` (tagged `phase`, `scenario`) and prints one-line `EURIPID_ERROR` JSON to stderr (captured in `k6-console.log`). Controlled by optional `logging` in environment JSON and orchestrator flags `-LogLevel`, `-DisableScenarioErrorLog`, `-IncludeUserContextInLogs`, or `EURIPID_*` env vars when invoking k6 directly.
 
 ## [1.0.1] - 2026-04-07

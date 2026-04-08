@@ -4,18 +4,11 @@
 // each shows up in the HTML report as a separate metric row.
 //
 // HTML REPORT MAPPING (what you'll see in summary.html):
-//   Group hierarchy (collapsible):
-//     journey_google_search
-//       ├─ navigate_to_google        (navigation_duration row)
-//       ├─ homepage_ready             (page_load_duration row)
-//       ├─ type_search_query          (user_action_duration row)
-//       ├─ submit_search              (user_action_duration row)
-//       └─ results_rendered           (page_load_duration row)
-//   Metric rows:
-//     navigation_duration    — p95/avg/min/max across all withNavigation calls
-//     user_action_duration   — p95/avg/min/max across all withUserAction calls
-//     page_load_duration     — p95/avg/min/max across all withPageLoad calls
-//     transaction_duration   — outer journey timing only
+//   Custom Trend rows (k6 group() cannot wrap async browser code; steps are tagged Trends):
+//     navigation_duration    -- p95/avg/min/max; tags include transaction=navigate_to_google
+//     page_load_duration     -- homepage_ready, results_rendered
+//     user_action_duration   -- type_search_query, submit_search
+//     transaction_duration   -- outer journey_google_search only
 //
 // Run via:
 //   ./scripts/run.ps1 -Scenario google-example -Environment google-example -Profile smoke
