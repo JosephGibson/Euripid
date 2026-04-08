@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Euripid - k6 + k6/browser performance test orchestrator.
 
@@ -44,7 +44,7 @@
     (scenario_errors counter still increments on failure).
 
 .PARAMETER IncludeUserContextInLogs
-    Sets EURIPID_INCLUDE_USER_CONTEXT=true — error lines may include username/role hints
+    Sets EURIPID_INCLUDE_USER_CONTEXT=true -- error lines may include username/role hints
     from the CSV row (passwords are never logged).
 
 .EXAMPLE
@@ -197,7 +197,7 @@ if ($missing.Count -gt 0) {
 
 $script:HasDataFile = Test-Path (Join-Path $RepoRoot $DataPath)
 if (-not $script:HasDataFile) {
-    Write-Dbg "Data file not found ($DataPath) — skipping data snapshot and DATA_FILE env var"
+    Write-Dbg "Data file not found ($DataPath) -- skipping data snapshot and DATA_FILE env var"
 }
 Write-Dbg "Inputs validated: scenario=$Scenario env=$Environment profile=$Profile data=$DataFile (present=$($script:HasDataFile))"
 
