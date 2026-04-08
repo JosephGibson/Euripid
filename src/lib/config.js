@@ -54,6 +54,9 @@ function validateEnvironment(e) {
   if (missing.length) {
     throw new Error(`Environment ${ENV_FILE}: missing required fields: ${missing.join(', ')}`);
   }
+  if (typeof e.timeouts !== 'object' || e.timeouts === null || Array.isArray(e.timeouts)) {
+    throw new Error(`Environment ${ENV_FILE}: 'timeouts' must be a plain object`);
+  }
   if (!e.timeouts.navigation || !e.timeouts.action) {
     throw new Error(`Environment ${ENV_FILE}: timeouts must include 'navigation' and 'action'`);
   }

@@ -15,5 +15,5 @@ URL imports. These are not redistributed in this repository:
   - k6 jslib k6-summary          MIT
     https://github.com/grafana/jslib.k6.io
 
-v1.0 imports these from upstream URLs without pinning. See CHANGELOG.md and
-AGENTS.md for the known reproducibility risk and the v1.1 plan.
+All three are imported by version-pinned URL (papaparse 5.1.1, k6-summary
+0.0.2, k6-reporter 3.0.4). Full vendoring (local copies) is planned for v1.1.

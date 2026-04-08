@@ -1,13 +1,13 @@
 # Euripid
 
-**v1.0.5** — k6 + `k6/browser` performance testing template with a Page Object Model layout, JSON-driven config, CSV-driven VU data, and a PowerShell orchestrator that packages every run into a timestamped zip.
+**v1.1.0** — k6 + `k6/browser` performance testing template with a Page Object Model layout, JSON-driven config, CSV-driven VU data, typed transaction helpers for the HTML report, and a PowerShell orchestrator that packages every run into a timestamped zip.
 
 > **Humans:** start at [`docs/USAGE.md`](docs/USAGE.md) for the CLI tour and flag reference.
 > **AI agents:** start at [`AGENTS.md`](AGENTS.md). Extension recipes live in [`docs/RECIPES.md`](docs/RECIPES.md). Each top-level directory has a one-paragraph `README.md` for orientation.
 
 ## Status
 
-v1.0 is **Windows-first**. `scripts/run.ps1` is written in cross-OS pwsh and runs on Linux/macOS, but no `run.sh` ships in v1.0. See [`CHANGELOG.md`](CHANGELOG.md) for the full v1.0 scope and known limitations.
+v1.1 adds **typed transaction helpers** (`withNavigation`, `withUserAction`, `withPageLoad`) so navigations, clicks, and page-load waits show as separate metric rows in the HTML report. `scripts/run.ps1` is cross-OS pwsh. See [`CHANGELOG.md`](CHANGELOG.md) for the full scope.
 
 ## Why k6/browser instead of Playwright
 

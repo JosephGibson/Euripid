@@ -227,19 +227,158 @@ export const cacheHitRate = new Rate('cache_hit_rate');
 
 ---
 
-## Transactions (groups + HTML report)
+## Transactions and the HTML report
 
-**Where:** `src/lib/transactions.js` — import `withTransaction` into a flow.
+**Where:** `src/lib/transactions.js`
+
+Four helpers, from general to specific:
+
+| Helper | Metric rows in HTML report | Use for |
+|--------|---------------------------|---------|
+| `withTransaction` | `transaction_duration` | Catch-all / outer journey wrapper |
+| `withNavigation` | `navigation_duration` + `transaction_duration` | `page.goto`, `page.waitForNavigation` |
+| `withUserAction` | `user_action_duration` + `transaction_duration` | Clicks, typing, form submits, keyboard |
+| `withPageLoad` | `page_load_duration` + `transaction_duration` | Asserting elements visible after an action |
+
+Every helper wraps `group()`, so the HTML report shows a **collapsible group tree** (journey > steps) alongside **per-type metric rows** with p95/avg/min/max.
+
+### How groups map to the report
+
+```
+withTransaction('journey_checkout', ...)       ← outer group in report
+  withNavigation('open_cart', ...)             ← nested group + navigation_duration row
+  withUserAction('click_pay', ...)             ← nested group + user_action_duration row
+  withPageLoad('confirmation_visible', ...)    ← nested group + page_load_duration row
+```
+
+All four also record `transaction_duration`, so that single Trend is always a unified view of every timed step — useful for a "total step time" threshold.
+
+### Recording a navigation (page.goto, full-page load)
 
 ```js
-import { withTransaction } from '../lib/transactions.js';
+import { withNavigation } from '../lib/transactions.js';
 
-await withTransaction('checkout_payment', async () => {
-  await page.locator('#pay').click();
+await withNavigation('navigate_to_login', async () => {
+  await page.goto(env.baseUrl + '/login', {
+    waitUntil: 'load',
+    timeout: env.timeouts.navigation,
+  });
 });
 ```
 
-Each call records a k6 **group** (nested timings in the summary) and a tagged **`transaction_duration`** sample. Name the transaction after the user-visible step (snake_case).
+### Recording a user action (click, type, submit)
+
+```js
+import { withUserAction } from '../lib/transactions.js';
+
+// Clicking a button
+await withUserAction('click_submit', async () => {
+  await page.locator('button[type="submit"]').click();
+});
+
+// Typing into a field
+await withUserAction('type_username', async () => {
+  await page.locator('#username').type('testuser@example.com');
+});
+
+// Keyboard shortcut
+await withUserAction('press_enter', async () => {
+  await page.keyboard.press('Enter');
+});
+```
+
+### Recording a page-load wait (element appears after action)
+
+```js
+import { withPageLoad } from '../lib/transactions.js';
+import { assertVisible } from '../lib/assertions.js';
+
+await withPageLoad('dashboard_ready', async () => {
+  await assertVisible(page, '[data-testid="dashboard"]', 'dashboard visible', env);
+});
+```
+
+### Setting thresholds on typed metrics
+
+Profile JSON can reference any of the typed Trends:
+
+```json
+{
+  "thresholds": {
+    "navigation_duration": ["p(95)<3000"],
+    "user_action_duration": ["p(95)<500"],
+    "page_load_duration": ["p(95)<5000"],
+    "transaction_duration": ["p(95)<10000"]
+  }
+}
+```
+
+### Full example
+
+See [`src/scenarios/google-example.js`](../src/scenarios/google-example.js) — it uses all four helpers in a single journey and documents which metric rows each step feeds.
+
+---
+
+## Reading and customizing reports
+
+**Where:** `src/lib/summary.js` generates all report outputs. See [`docs/USAGE.md`](USAGE.md#reports) for a detailed breakdown of each file.
+
+### Quick guide to the HTML report
+
+Open `results/<runId>/summary.html` in a browser. Key sections to check:
+
+1. **Thresholds (top)** — red/green pass/fail for each threshold in your profile JSON. If any are red, k6 exited non-zero.
+2. **Checks** — pass/fail counts for every `check()` and `assertVisible`/`assertText`/`assertHidden` call.
+3. **Groups** — expand the tree to see per-step timings. Group names match your `withTransaction` / `withNavigation` / `withUserAction` / `withPageLoad` names.
+4. **Custom metrics** — scroll to `navigation_duration`, `user_action_duration`, `page_load_duration` for per-type aggregates. `transaction_duration` is the unified view.
+5. **Browser Web Vitals** — `browser_web_vital_lcp`, `browser_web_vital_fcp`, etc. are collected automatically by k6/browser with no extra code.
+
+### Using the JSON summary in CI
+
+Parse `summary.json` to gate deployments:
+
+```bash
+# Check if p95 navigation time exceeded 3 seconds
+p95=$(jq '.metrics.navigation_duration.values["p(95)"]' results/*/summary.json)
+if (( $(echo "$p95 > 3000" | bc -l) )); then
+  echo "FAIL: navigation p95 = ${p95}ms (threshold: 3000ms)"
+  exit 1
+fi
+```
+
+Or use k6's built-in threshold mechanism in the profile JSON — k6 checks them automatically and exits non-zero on failure:
+
+```json
+{
+  "thresholds": {
+    "navigation_duration": ["p(95)<3000"],
+    "user_action_duration": ["p(95)<500"],
+    "page_load_duration": ["p(95)<5000"],
+    "checks": ["rate>0.99"]
+  }
+}
+```
+
+### Adding the report title
+
+The HTML report title is set automatically from the environment filename (e.g. "Euripid — staging"). No configuration needed — `summary.js` extracts it from `__ENV.ENV_FILE`.
+
+### Custom metrics in the report
+
+Any Trend, Counter, or Rate defined in `src/lib/metrics.js` automatically appears in the HTML report and JSON summary. To add your own:
+
+```js
+import { Trend } from 'k6/metrics';
+export const checkoutDuration = new Trend('flow_checkout_duration', true);
+```
+
+Then record samples in your flow:
+
+```js
+checkoutDuration.add(Date.now() - startTime);
+```
+
+The metric shows up as `flow_checkout_duration` in the HTML report with avg/min/max/p90/p95.
 
 ---
 
