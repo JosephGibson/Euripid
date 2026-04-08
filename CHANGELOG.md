@@ -5,6 +5,8 @@ All notable changes to Euripid. Format loosely follows Keep a Changelog.
 ## [1.2.0] - 2026-04-08
 
 ### Added
+- **`config/profiles/load-demo.json`** -- ramped load like `load` but thresholds on `checks` only (no `browser_web_vital_*`), for public demo scenarios such as `google-example` where Web Vitals SLAs are unrealistic under concurrency.
+- **Headed / debug browser:** `run.ps1` switches `-BrowserDebug` (`K6_BROWSER_HEADLESS=false`) and `-BrowserCdpLog` (`K6_BROWSER_DEBUG=true`), with env vars restored after k6 exits. Optional environment JSON `browser` object (`headless`, `type`) merged by `config.js` into scenario browser options.
 - **Vendored runtime helpers** (`src/vendor/`) for CSV parsing, text summary rendering, and HTML report generation so runs no longer depend on third-party URL imports at init time.
 - **`data_errors` counter** (`src/lib/metrics.js`) to separate CSV/data-stage failures from flow execution failures in scenario reporting.
 
@@ -18,6 +20,8 @@ All notable changes to Euripid. Format loosely follows Keep a Changelog.
 - **`logging.js`** now coerces invalid log levels to `error` and reports the misconfiguration in the emitted error payload instead of throwing on the error path.
 
 ### Fixed
+- **`google-example`:** best-effort EU cookie consent dismiss (`#L2AGLb`), broader results selectors, longer results wait, and URL-based check instead of title substring (titles vary by locale). Documented use of `load-demo` instead of `load` for multi-VU runs.
+- **`run.ps1`** no longer treats k6 stderr log lines (threshold crossed, etc.) as a terminating pipeline error on PowerShell 7.4+ (`PSNativeCommandUseErrorActionPreference` disabled for the k6 invocation only). k6’s real exit code is preserved; the misleading `k6 invocation threw` message for threshold failures is avoided.
 - **`browser-login` scenario** now records data-stage failures through `data_errors`, preventing dashboards from conflating missing CSV rows with in-flow failures.
 - **`NOTICE`** now reflects the vendored helper strategy instead of promising future vendoring.
 

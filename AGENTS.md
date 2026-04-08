@@ -67,6 +67,10 @@ Optional: `-DataFile users.csv`, `-RunName release-123`. Output lands in `result
 ```
 This hits `quickpizza.grafana.com` (k6's public demo) and verifies the entire toolchain — config loading, validation, browser startup, navigation, summary writing, and zip packaging — without needing any infrastructure.
 
+**Headed browser (watch the test):** add `-BrowserDebug` to set `K6_BROWSER_HEADLESS=false` for that run, or put `"browser": { "headless": false }` in the environment JSON. Optional `-BrowserCdpLog` sets `K6_BROWSER_DEBUG=true` (verbose).
+
+**`google-example` + ramped VUs:** use `-Profile load-demo`, not `load`. `load.json` includes Web Vitals thresholds that fail on third-party sites under concurrency; `load-demo` gates on `checks` only.
+
 ## File naming conventions
 
 - Page classes: `PascalCase.js`, class name matches filename (`LoginPage.js` → `class LoginPage`).

@@ -150,6 +150,14 @@ export const handleSummary = makeSummary;
 
 **Required fields** (validated at init by `config.js`): `name`, `baseUrl`, `timeouts.navigation`, `timeouts.action`. Timeouts must be positive finite numbers. Optional: `timeouts.assertion` (default 10 000 ms) — global timeout for element assertion waits. Add other fields freely; they'll be available on `environment` in any flow or page.
 
+**Optional `browser` block** (merged into k6 scenario `options.browser` by `buildOptions()`):
+
+```json
+"browser": { "headless": false, "type": "chromium" }
+```
+
+Only `headless` (boolean) and `type` (`"chromium"`) are accepted. For one-off runs without editing JSON, use `./scripts/run.ps1 ... -BrowserDebug` (sets `K6_BROWSER_HEADLESS=false` for that process).
+
 ---
 
 ## Add a new profile
@@ -197,6 +205,10 @@ export const handleSummary = makeSummary;
   }
 }
 ```
+
+**Ramping public / third-party demos** (same shape as `load` but no Web Vitals SLAs -- use with `google-example` and similar):
+
+The repo ships `config/profiles/load-demo.json`: ramped VUs with `checks` only (`rate>0.90`). Use it instead of `load.json` when the target is not under your control.
 
 **Rules:** integer fields such as `vus`, `iterations`, `preAllocatedVUs`, and `maxVUs` must be positive integers; `startVUs` and stage `target` values must be non-negative integers; `stages` must be a non-empty array with `duration` + `target`. If you add a new executor, extend `REQUIRED_BY_EXECUTOR` and the `passthrough` list in `src/lib/config.js`. Don't put env-specific URLs in profiles — that's what environments are for.
 

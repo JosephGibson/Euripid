@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Euripid - k6 + k6/browser performance test orchestrator.
 
@@ -47,6 +47,14 @@
     Sets EURIPID_INCLUDE_USER_CONTEXT=true -- error lines may include username/role hints
     from the CSV row (passwords are never logged).
 
+.PARAMETER BrowserDebug
+    Runs Chromium in headed mode (K6_BROWSER_HEADLESS=false) so you can watch the test.
+    Process env vars are restored after k6 exits.
+
+.PARAMETER BrowserCdpLog
+    Sets K6_BROWSER_DEBUG=true (verbose Chrome DevTools Protocol logging to the console).
+    Use with -BrowserDebug or alone; env vars are restored after k6 exits.
+
 .EXAMPLE
     ./scripts/run.ps1 -Scenario browser-login -Environment staging -Profile load
 
@@ -55,6 +63,9 @@
 
 .EXAMPLE
     ./scripts/run.ps1 -Scenario browser-login -Environment staging -Profile load -RunName release-123 -Verbose
+
+.EXAMPLE
+    ./scripts/run.ps1 -Scenario self-test -Environment self-test -Profile smoke -BrowserDebug
 #>
 
 [CmdletBinding()]
@@ -69,7 +80,9 @@ param(
     [switch] $Quiet,
     [string] $LogLevel = '',
     [switch] $DisableScenarioErrorLog,
-    [switch] $IncludeUserContextInLogs
+    [switch] $IncludeUserContextInLogs,
+    [switch] $BrowserDebug,
+    [switch] $BrowserCdpLog
 )
 
 $ErrorActionPreference = 'Stop'
@@ -250,14 +263,59 @@ $k6Args += $ScenarioFile
 Write-Step "Invoking k6"
 Write-Dbg "Command: $K6 $($k6Args -join ' ')"
 
+$browserEnvRestore = New-Object System.Collections.ArrayList
+if ($BrowserDebug) {
+    [void]$browserEnvRestore.Add(@{
+        Name     = 'K6_BROWSER_HEADLESS'
+        Previous = [Environment]::GetEnvironmentVariable('K6_BROWSER_HEADLESS', 'Process')
+    })
+    $env:K6_BROWSER_HEADLESS = 'false'
+}
+if ($BrowserCdpLog) {
+    [void]$browserEnvRestore.Add(@{
+        Name     = 'K6_BROWSER_DEBUG'
+        Previous = [Environment]::GetEnvironmentVariable('K6_BROWSER_DEBUG', 'Process')
+    })
+    $env:K6_BROWSER_DEBUG = 'true'
+}
+if ($browserEnvRestore.Count -gt 0) {
+    $parts = New-Object System.Collections.ArrayList
+    if ($BrowserDebug) { [void]$parts.Add('headed (K6_BROWSER_HEADLESS=false)') }
+    if ($BrowserCdpLog) { [void]$parts.Add('CDP log (K6_BROWSER_DEBUG=true)') }
+    Write-Log ('Browser: ' + ($parts -join '; '))
+}
+
+# PowerShell 7.4+ maps native stderr to error records; with $ErrorActionPreference Stop, k6's
+# own "level=error" log lines (e.g. threshold crossed) terminate the pipeline and falsely hit
+# catch below. Disable for this invocation only. Windows PowerShell 5.1 has no such variable.
+$savedNativeCmdErrAct = $null
+if (Test-Path Variable:PSNativeCommandUseErrorActionPreference) {
+    $savedNativeCmdErrAct = $PSNativeCommandUseErrorActionPreference
+    $PSNativeCommandUseErrorActionPreference = $false
+}
+
 $exitCode = 0
 try {
-    & $K6 @k6Args 2>&1 | Tee-Object -FilePath $ConsoleLog
-    $exitCode = $LASTEXITCODE
-} catch {
-    $exitCode = 1
-    Write-Err "k6 invocation threw: $($_.Exception.Message)"
-    $_ | Out-File -Append $ConsoleLog
+    try {
+        & $K6 @k6Args 2>&1 | Tee-Object -FilePath $ConsoleLog
+        $exitCode = $LASTEXITCODE
+    } catch {
+        $exitCode = if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }
+        Write-Err "k6 invocation failed: $($_.Exception.Message)"
+        $_ | Out-File -Append $ConsoleLog
+    }
+} finally {
+    if ($null -ne $savedNativeCmdErrAct) {
+        $PSNativeCommandUseErrorActionPreference = $savedNativeCmdErrAct
+    }
+    foreach ($entry in $browserEnvRestore) {
+        $prev = $entry.Previous
+        if ([string]::IsNullOrEmpty($prev)) {
+            Remove-Item -Path "Env:$($entry.Name)" -ErrorAction SilentlyContinue
+        } else {
+            Set-Item -Path "Env:$($entry.Name)" -Value $prev
+        }
+    }
 }
 
 if ($exitCode -eq 0) {

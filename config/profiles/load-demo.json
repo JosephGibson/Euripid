@@ -1,0 +1,15 @@
+{
+  "name": "load-demo",
+  "description": "Ramped load for public or third-party demo targets (no Web Vitals SLAs)",
+  "executor": "ramping-vus",
+  "startVUs": 0,
+  "stages": [
+    { "duration": "30s", "target": 5 },
+    { "duration": "2m",  "target": 5 },
+    { "duration": "30s", "target": 0 }
+  ],
+  "gracefulRampDown": "30s",
+  "thresholds": {
+    "checks": ["rate>0.90"]
+  }
+}

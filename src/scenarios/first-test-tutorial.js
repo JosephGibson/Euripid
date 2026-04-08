@@ -118,7 +118,7 @@ export default async function () {
     // =========================================================================
     // SECTION 4 — User journey modeled as an outer transaction plus typed steps
     // =========================================================================
-    // Outer transaction = whole story (one group in the report).
+    // Outer transaction = whole journey (tagged transaction_duration in the report).
     // Inner typed steps = named actions/load waits a product owner would recognise.
 
     await withTransaction('tutorial_acme_pizza_journey', async () => {

@@ -53,6 +53,8 @@ The **`self-test`** scenario stays a minimal health check; **`first-test-tutoria
 | `-LogLevel`    | Override `logging.level` for k6 (`EURIPID_LOG_LEVEL`: error/warn/info/debug). |
 | `-DisableScenarioErrorLog` | Suppress structured `EURIPID_ERROR` JSON lines in k6 output (captured in `k6-console.log`). |
 | `-IncludeUserContextInLogs` | Allow username/role hints in error lines (`EURIPID_INCLUDE_USER_CONTEXT`). Passwords are never logged. |
+| `-BrowserDebug` | Headed Chromium (`K6_BROWSER_HEADLESS=false`) so you can watch the test. Restores prior env after k6 exits. |
+| `-BrowserCdpLog` | Verbose Chrome DevTools log (`K6_BROWSER_DEBUG=true`). Very noisy; combine with `-BrowserDebug` or use alone. |
 
 ### Built-in PowerShell help
 
@@ -82,6 +84,15 @@ Get-Help ./scripts/run.ps1 -Examples
 ```powershell
 ./scripts/run.ps1 -Scenario self-test -Environment self-test -Profile smoke -Verbose
 ```
+
+**Watch the browser (headed mode):**
+```powershell
+./scripts/run.ps1 -Scenario self-test -Environment self-test -Profile smoke -BrowserDebug
+```
+
+Use **1 VU** in your profile while debugging so windows are manageable. Headed mode needs a display (or Windows desktop session); CI agents are usually headless. k6 documents these and other knobs at [Browser options](https://grafana.com/docs/k6/latest/using-k6-browser/options/) (`K6_BROWSER_HEADLESS`, `K6_BROWSER_DEBUG`, etc.). You can also set `"browser": { "headless": false }` in an environment JSON; `config.js` merges it into scenario `options.browser` (see `docs/RECIPES.md`).
+
+**Google example + load:** `config/profiles/load.json` includes `browser_web_vital_*` thresholds suited to apps you control. For [`google-example`](../src/scenarios/google-example.js) (third-party site, variable performance), use **`-Profile load-demo`** instead so the run is gated on `checks` only.
 
 ## Output
 

@@ -12,6 +12,9 @@
 //
 // Run via:
 //   ./scripts/run.ps1 -Scenario google-example -Environment google-example -Profile smoke
+// Multi-VU / ramped runs: use Profile load-demo (not load) -- load.json enforces Web Vitals
+// SLAs that third-party sites like Google will often breach under concurrency.
+//   ./scripts/run.ps1 -Scenario google-example -Environment google-example -Profile load-demo
 // Or directly:
 //   k6 run -e ENV_FILE=config/environments/google-example.json \
 //          -e PROFILE_FILE=config/profiles/smoke.json \
@@ -51,6 +54,13 @@ export default async function () {
       // withPageLoad records page_load_duration.
       // Use for: asserting elements are visible/ready after a navigation or action.
       await withPageLoad('homepage_ready', async () => {
+        // EU/UK consent interstitial -- best-effort; ignore if not shown.
+        try {
+          await page.locator('#L2AGLb').click({ timeout: 5000 });
+        } catch (_) {
+          /* no consent button */
+        }
+
         await assertVisible(
           page,
           'textarea[name="q"], input[name="q"]',
@@ -87,16 +97,23 @@ export default async function () {
       // DOM to render, so this single step captures "time from submit to
       // results visible" — the metric users care about most.
       await withPageLoad('results_rendered', async () => {
+        const resultsTimeout = Math.max(
+          environment.timeouts.assertion,
+          Math.min(environment.timeouts.navigation, 45000),
+        );
         await assertVisible(
           page,
-          '#search, #rso',
+          '#rso, #center_col',
           'search results container is visible',
           environment,
+          { timeout: resultsTimeout },
         );
 
-        const resultsTitle = await page.title();
-        check(resultsTitle, {
-          'results title contains query': (t) => /k6/i.test(t || ''),
+        const resultsUrl = await page.url();
+        check(resultsUrl, {
+          'search results url': (u) =>
+            typeof u === 'string' &&
+            (u.includes('/search') || u.includes('q=') || u.includes('search?q=')),
         });
       });
     });

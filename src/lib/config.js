@@ -200,6 +200,30 @@ function validateEnvironment(e) {
   }
 }
 
+function validateOptionalBrowser(e) {
+  if (!e.browser) {
+    return;
+  }
+  const b = e.browser;
+  if (!isPlainObject(b)) {
+    throw new Error(`Environment ${ENV_FILE}: 'browser' must be an object`);
+  }
+  const allowed = ['headless', 'type'];
+  for (const k of Object.keys(b)) {
+    if (!allowed.includes(k)) {
+      throw new Error(`Environment ${ENV_FILE}: unknown browser field '${k}'`);
+    }
+  }
+  if (b.headless !== undefined && typeof b.headless !== 'boolean') {
+    throw new Error(`Environment ${ENV_FILE}: browser.headless must be boolean`);
+  }
+  if (b.type !== undefined) {
+    if (typeof b.type !== 'string' || b.type !== 'chromium') {
+      throw new Error(`Environment ${ENV_FILE}: browser.type must be 'chromium'`);
+    }
+  }
+}
+
 function validateOptionalLogging(e) {
   if (!e.logging) {
     return;
@@ -226,6 +250,7 @@ function validateOptionalLogging(e) {
 }
 
 validateEnvironment(environment);
+validateOptionalBrowser(environment);
 validateOptionalLogging(environment);
 validateProfile(profile);
 
@@ -249,7 +274,17 @@ export function buildOptions(scenarioName) {
   }
 
   // k6/browser requires this option on any scenario that drives a browser.
-  scenario.options = { browser: { type: 'chromium' } };
+  const browser = { type: 'chromium' };
+  const eb = environment.browser;
+  if (eb) {
+    if (eb.headless !== undefined) {
+      browser.headless = eb.headless;
+    }
+    if (eb.type !== undefined) {
+      browser.type = eb.type;
+    }
+  }
+  scenario.options = { browser };
 
   return {
     scenarios: { [scenarioName]: scenario },
