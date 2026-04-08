@@ -1,6 +1,10 @@
 // src/lib/data.js
 // Loads a CSV file once into a SharedArray (read-once, shared across all VUs)
 // and exposes a deterministic per-VU row picker.
+//
+// CONTRACT: DATA_FILE paths are repo-root-relative. Because this file lives
+// at src/lib/, we prepend '../../' to anchor open() at the repo root.
+// If you move this file, update the prefix in the open() call accordingly.
 
 import { SharedArray } from 'k6/data';
 import papaparse from 'https://jslib.k6.io/papaparse/5.1.1/index.js';

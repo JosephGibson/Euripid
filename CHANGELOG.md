@@ -2,6 +2,31 @@
 
 All notable changes to Euripid. Format loosely follows Keep a Changelog.
 
+## [1.1.0] - 2026-04-08
+
+### Added
+- **Typed transaction helpers** (`src/lib/transactions.js`): `withNavigation`, `withUserAction`, `withPageLoad` — purpose-specific wrappers around `group()` that record to dedicated Trend metrics (`navigation_duration`, `user_action_duration`, `page_load_duration`) in addition to the unified `transaction_duration`. Each type gets its own row in the k6 HTML report.
+- **Typed Trend metrics** (`src/lib/metrics.js`): `navigationDuration`, `userActionDuration`, `pageLoadDuration` — separate metric rows in the HTML/JSON summary for navigations, user interactions, and post-action page-load waits.
+- **`google-example` scenario** (`src/scenarios/google-example.js`) with environment (`config/environments/google-example.json`) — demonstrates all four transaction helpers against Google.com: navigation, page-load assertions, typing, and form submission.
+- **HTML report recipe** (`docs/RECIPES.md`): "Transactions and the HTML report" section with examples for each helper type, threshold configuration, and how groups map to the report structure.
+
+### Changed
+- **`summary.js`** now passes a dynamic report title to `k6-reporter` derived from the environment filename (e.g. "Euripid — staging").
+- **`run.ps1` version** is now read from the `VERSION` file (single source of truth) instead of being hardcoded in the banner.
+- **`run.ps1` data file handling** — the `-DataFile` parameter is now optional in practice; if the CSV does not exist, the orchestrator skips the data snapshot and `DATA_FILE` env var instead of failing. Scenarios that don't import `data.js` (e.g. `self-test`) no longer require a data file to be present.
+- **`run.ps1` k6 resolution** — `Resolve-K6` now checks `bin/k6` on Linux/macOS (not just `bin/k6.exe` on Windows). Error message shows the correct platform-specific binary name.
+- **`run.ps1` banner** — removed placeholder `your-org` URL.
+
+### Fixed
+- **`NOTICE`** — corrected stale claim that external imports were "unpinned"; all three have been version-pinned since v1.0.5.
+- **`config.js` `validateEnvironment`** — added a type guard for the `timeouts` field so `"timeouts": null` produces a clear validation error instead of an unhandled `TypeError`.
+- **`data.js`** — added the same `CONTRACT` path-prefix warning as `config.js` so the `../../` anchor is documented for future maintainers.
+
+### Removed (from known-limitations)
+- "Version hardcoded in multiple places" — `run.ps1` now reads `VERSION`.
+
+---
+
 ## [1.0.5] - 2026-04-07
 
 ### Added

@@ -8,9 +8,12 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js';
 
 const OUT = (__ENV.RUN_OUTPUT_DIR || 'results').replace(/\/$/, '');
 
+const ENV_LABEL = (__ENV.ENV_FILE || '').replace(/.*\//, '').replace('.json', '');
+const REPORT_TITLE = ENV_LABEL ? `Euripid — ${ENV_LABEL}` : 'Euripid';
+
 export function handleSummary(data) {
   return {
-    [`${OUT}/summary.html`]: htmlReport(data),
+    [`${OUT}/summary.html`]: htmlReport(data, { title: REPORT_TITLE }),
     [`${OUT}/summary.json`]: JSON.stringify(data, null, 2),
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
   };

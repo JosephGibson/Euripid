@@ -20,6 +20,8 @@
 
 .PARAMETER DataFile
     CSV file under data/ (with extension). Default: users.csv.
+    If the file does not exist, it is silently skipped (useful for scenarios
+    that do not import data.js, e.g. self-test).
 
 .PARAMETER RunName
     Optional friendly tag baked into the output zip name.
@@ -129,7 +131,8 @@ function Open-LogFile {
 # =============================================================================
 function Write-Banner {
     if ($NoBanner -or $Quiet) { return }
-    $version = '1.0.5'
+    $versionFile = Join-Path (Join-Path $PSScriptRoot '..') 'VERSION'
+    $version = if (Test-Path $versionFile) { (Get-Content $versionFile -Raw).Trim() } else { 'dev' }
     $banner = @'
  _____ _   _ ____  ___ ____ ___ ____  
 | ____| | | |  _ \|_ _|  _ \_ _|  _ \ 
@@ -140,7 +143,7 @@ function Write-Banner {
     Write-Host ''
     Write-Host $banner -ForegroundColor Cyan
     Write-Host "  k6 + k6/browser performance harness" -ForegroundColor DarkGray
-    Write-Host "  v$version  -  https://github.com/your-org/euripid" -ForegroundColor DarkGray
+    Write-Host "  v$version" -ForegroundColor DarkGray
     Write-Host ''
 }
 
@@ -161,13 +164,12 @@ Write-Dbg "Repo root: $RepoRoot"
 $script:OnWindows = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
 
 function Resolve-K6 {
-    if ($script:OnWindows) {
-        $bundled = Join-Path $RepoRoot 'bin/k6.exe'
-        if (Test-Path $bundled) { return $bundled }
-    }
+    $ext = if ($script:OnWindows) { 'k6.exe' } else { 'k6' }
+    $bundled = Join-Path (Join-Path $RepoRoot 'bin') $ext
+    if (Test-Path $bundled) { return $bundled }
     $cmd = Get-Command k6 -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
-    throw "k6 binary not found. Place it at bin/k6.exe (Windows) or install on PATH."
+    throw "k6 binary not found. Place it at bin/$ext or install k6 on PATH."
 }
 
 try {
@@ -185,14 +187,19 @@ $ProfileFile  = "config/profiles/$Profile.json"
 $DataPath     = "data/$DataFile"
 
 $missing = @()
-foreach ($f in @($ScenarioFile, $EnvFile, $ProfileFile, $DataPath)) {
+foreach ($f in @($ScenarioFile, $EnvFile, $ProfileFile)) {
     if (-not (Test-Path (Join-Path $RepoRoot $f))) { $missing += $f }
 }
 if ($missing.Count -gt 0) {
     foreach ($f in $missing) { Write-Err "Required file not found: $f" }
     exit 2
 }
-Write-Dbg "Inputs validated: scenario=$Scenario env=$Environment profile=$Profile data=$DataFile"
+
+$script:HasDataFile = Test-Path (Join-Path $RepoRoot $DataPath)
+if (-not $script:HasDataFile) {
+    Write-Dbg "Data file not found ($DataPath) — skipping data snapshot and DATA_FILE env var"
+}
+Write-Dbg "Inputs validated: scenario=$Scenario env=$Environment profile=$Profile data=$DataFile (present=$($script:HasDataFile))"
 
 # --- Build per-run output directory ------------------------------------------
 $Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -213,18 +220,22 @@ $ConsoleLog = Join-Path $RunDirAbs 'k6-console.log'
 # --- Snapshot resolved config into the run dir -------------------------------
 Copy-Item (Join-Path $RepoRoot $EnvFile)     (Join-Path $RunDirAbs 'environment.json')
 Copy-Item (Join-Path $RepoRoot $ProfileFile) (Join-Path $RunDirAbs 'profile.json')
-Copy-Item (Join-Path $RepoRoot $DataPath)    (Join-Path $RunDirAbs 'data.csv')
-Write-Log "Snapshotted environment, profile, and data into run dir"
+if ($script:HasDataFile) {
+    Copy-Item (Join-Path $RepoRoot $DataPath) (Join-Path $RunDirAbs 'data.csv')
+}
+Write-Log "Snapshotted config into run dir (data=$(if ($script:HasDataFile) {'yes'} else {'skipped'}))"
 
 # --- Run k6 ------------------------------------------------------------------
 $k6Args = @(
     'run',
     '-e', "ENV_FILE=$EnvFile",
     '-e', "PROFILE_FILE=$ProfileFile",
-    '-e', "DATA_FILE=$DataPath",
     '-e', "RUN_OUTPUT_DIR=$RunDir",
     '--out', "json=$JsonOut"
 )
+if ($script:HasDataFile) {
+    $k6Args += '-e', "DATA_FILE=$DataPath"
+}
 if ($LogLevel) {
     $k6Args += '-e', "EURIPID_LOG_LEVEL=$LogLevel"
 }
