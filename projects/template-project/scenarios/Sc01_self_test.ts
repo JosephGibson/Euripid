@@ -11,7 +11,7 @@ import {
   withTransaction,
 } from '../../../harness/index.ts';
 
-export const options = buildOptions('self_test');
+export const options = buildOptions('Sc01_self_test');
 
 export default async function (): Promise<void> {
   const page = await browser.newPage();
@@ -33,7 +33,7 @@ export default async function (): Promise<void> {
     });
   } catch (err) {
     logScenarioError(environment, {
-      scenario: 'self_test',
+      scenario: 'Sc01_self_test',
       phase: 'iteration',
       err,
     });

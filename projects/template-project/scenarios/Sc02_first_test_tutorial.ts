@@ -9,7 +9,7 @@
  *
  * HOW TO RUN (from the repo root, with PowerShell):
  *
- *   ./scripts/run.ps1 -Project template-project -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
+ *   ./scripts/run.ps1 -Project template-project -Scenario Sc02_first_test_tutorial -Environment example-tutorial -Profile smoke
  *
  * WHAT YOU GET IN projects/template-project/results/<runId>/:
  *   - summary.html / summary.json  — metrics, checks, groups, transactions
@@ -50,7 +50,7 @@ import {
   withUserAction,
 } from '../../../harness/index.ts';
 
-export const options = buildOptions('first_test_tutorial');
+export const options = buildOptions('Sc02_first_test_tutorial');
 
 export default async function (): Promise<void> {
   const page = await browser.newPage();
@@ -103,7 +103,7 @@ export default async function (): Promise<void> {
     });
   } catch (err) {
     logScenarioError(environment, {
-      scenario: 'first_test_tutorial',
+      scenario: 'Sc02_first_test_tutorial',
       phase: 'iteration',
       err,
     });

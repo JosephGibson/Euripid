@@ -78,13 +78,13 @@ Each project directory should be understandable on its own and should contain:
 ## How to run
 
 ```powershell
-./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
 ```
 
 Tutorial path:
 
 ```powershell
-./scripts/run.ps1 -Project template-project -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario Sc02_first_test_tutorial -Environment example-tutorial -Profile smoke
 ```
 
 ## How to extend

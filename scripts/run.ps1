@@ -54,10 +54,10 @@
     or role hints from the CSV row (passwords are never logged).
 
 .EXAMPLE
-    ./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
+    ./scripts/run.ps1 -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
 
 .EXAMPLE
-    ./scripts/run.ps1 -Project template-project -Scenario browser-login -Environment staging -Profile load -RunName release-123
+    ./scripts/run.ps1 -Project template-project -Scenario Sc03_browser_login -Environment staging -Profile load -RunName release-123
 #>
 
 [CmdletBinding()]

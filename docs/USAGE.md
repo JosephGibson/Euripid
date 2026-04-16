@@ -15,7 +15,7 @@ The new Euripid workflow is project-aware: you run a named scenario inside a nam
 ## First run
 
 ```powershell
-./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
 ```
 
 This hits `quickpizza.grafana.com` and validates the rewritten harness path: project config loading, profile validation, browser startup, summary generation, and project-local artifact writing.
@@ -23,10 +23,10 @@ This hits `quickpizza.grafana.com` and validates the rewritten harness path: pro
 ## Tutorial path
 
 ```powershell
-./scripts/run.ps1 -Project template-project -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario Sc02_first_test_tutorial -Environment example-tutorial -Profile smoke
 ```
 
-Then open [projects/template-project/scenarios/first-test-tutorial.ts](/home/joker/Projects/Euripid/projects/template-project/scenarios/first-test-tutorial.ts). It is the committed onboarding scenario for the new architecture.
+Then open [projects/template-project/scenarios/Sc02_first_test_tutorial.ts](/home/joker/Projects/Euripid/projects/template-project/scenarios/Sc02_first_test_tutorial.ts). It is the committed onboarding scenario for the new architecture.
 
 ## Command-line reference
 
@@ -62,22 +62,22 @@ Then open [projects/template-project/scenarios/first-test-tutorial.ts](/home/jok
 Smoke self-test:
 
 ```powershell
-./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
 ```
 
 Tutorial walkthrough:
 
 ```powershell
-./scripts/run.ps1 -Project template-project -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario Sc02_first_test_tutorial -Environment example-tutorial -Profile smoke
 ```
 
 Login sample under ramped load:
 
 ```powershell
-./scripts/run.ps1 -Project template-project -Scenario browser-login -Environment staging -Profile load -RunName release-123
+./scripts/run.ps1 -Project template-project -Scenario Sc03_browser_login -Environment staging -Profile load -RunName release-123
 ```
 
-`self-test` and `first-test-tutorial` are the committed zero-setup validation paths. `browser-login` is a template example, so the shipped `dev` and `staging` environments still use placeholder URLs and should be replaced in copied projects before you expect that scenario to pass.
+`Sc01_self_test` and `Sc02_first_test_tutorial` are the committed zero-setup validation paths. `Sc03_browser_login` is a template example, so the shipped `dev` and `staging` environments still use placeholder URLs and should be replaced in copied projects before you expect that scenario to pass.
 
 ## Project config model
 
@@ -178,14 +178,14 @@ Current k6 rejects async `group()` callbacks in browser scenarios. Because of th
 If you already have a working k6 binary and want to validate a scenario without the PowerShell runner, you can run it directly:
 
 ```bash
-mkdir -p projects/template-project/results/direct-self-test
+mkdir -p projects/template-project/results/direct-Sc01_self_test
 bin/k6 run \
   -e PROJECT=template-project \
   -e ENVIRONMENT=self-test \
   -e PROJECT_CONFIG_FILE=projects/template-project/project.config.json \
   -e PROFILE_FILE=projects/template-project/profiles/smoke.json \
-  -e RUN_OUTPUT_DIR=projects/template-project/results/direct-self-test \
-  projects/template-project/scenarios/self-test.ts
+  -e RUN_OUTPUT_DIR=projects/template-project/results/direct-Sc01_self_test \
+  projects/template-project/scenarios/Sc01_self_test.ts
 ```
 
 `RUN_OUTPUT_DIR` must already exist before `k6` writes `summary.html` and `summary.json`, which is why the example creates the directory first. That direct path is useful for harness debugging, but the supported day-to-day interface remains `scripts/run.ps1`.

@@ -34,12 +34,12 @@ docs/                       usage, recipes, and planning docs
    - Linux/macOS: install `k6` on PATH or place a `k6` binary at `bin/k6`, and use PowerShell 7 (`pwsh`) to run the orchestrator.
 3. Run the committed end-to-end validation project:
    ```powershell
-   ./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
+   ./scripts/run.ps1 -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
    ```
 4. Read the tutorial scenario:
-   [projects/template-project/scenarios/first-test-tutorial.ts](/home/joker/Projects/Euripid/projects/template-project/scenarios/first-test-tutorial.ts)
+   [projects/template-project/scenarios/Sc02_first_test_tutorial.ts](/home/joker/Projects/Euripid/projects/template-project/scenarios/Sc02_first_test_tutorial.ts)
 
-Out of the box, the committed runnable paths are `self-test` and `first-test-tutorial`, which target Grafana's public QuickPizza demo. The `browser-login` sample is a template for copied projects and still expects a real application-specific environment.
+Out of the box, the committed runnable paths are `Sc01_self_test` and `Sc02_first_test_tutorial`, which target Grafana's public QuickPizza demo. `Sc03_browser_login` is a template example for copied projects and still expects a real application-specific environment.
 
 ## Working Model
 

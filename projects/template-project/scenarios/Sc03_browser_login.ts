@@ -9,7 +9,7 @@ import {
 import { rowForVU } from '../../../harness/data.ts';
 import { runLoginFlow } from '../flows/login-flow.ts';
 
-export const options = buildOptions('browser_login');
+export const options = buildOptions('Sc03_browser_login');
 
 export default async function (): Promise<void> {
   const page = await browser.newPage();
@@ -20,14 +20,14 @@ export default async function (): Promise<void> {
     } catch (err) {
       dataErrors.add(1);
       logScenarioError(environment, {
-        scenario: 'browser_login',
+        scenario: 'Sc03_browser_login',
         phase: 'data',
         err,
       });
       throw err;
     }
 
-    await runLoginFlow(page, environment, user, { scenario: 'browser_login' });
+    await runLoginFlow(page, environment, user, { scenario: 'Sc03_browser_login' });
   } finally {
     await page.close();
   }

@@ -22,7 +22,7 @@ export async function runLoginFlow(
   user: DatasetRow,
   ctx: FlowContext = {},
 ): Promise<void> {
-  const scenario = ctx.scenario || 'browser_login';
+  const scenario = ctx.scenario || 'Sc03_browser_login';
   const flowStart = Date.now();
   const loginPage = new LoginPage(page, env);
   const dashboard = new DashboardPage(page, env);

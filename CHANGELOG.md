@@ -25,7 +25,7 @@ Versioning has been reset to **0.1.x** for alpha, milestone-driven development. 
 - Vendored runtime-safe helpers in `harness/vendor/` for CSV parsing and report rendering.
 - PowerShell orchestrator (`scripts/run.ps1`) that resolves project/scenario/profile/environment inputs, snapshots run inputs, runs k6, and packages each run into a timestamped zip.
 - Per-run output isolation via `RUN_OUTPUT_DIR` so summaries and screenshots land in the correct project-local results directory.
-- Committed validation scenarios including `self-test`, `first-test-tutorial`, and `browser-login`.
+- Committed validation scenarios including `Sc01_self_test`, `Sc02_first_test_tutorial`, and `Sc03_browser_login`.
 - Agent- and human-facing docs including `AGENTS.md`, `README.md`, `docs/USAGE.md`, `docs/RECIPES.md`, and the overhaul plans in `docs/plans/`.
 
 ### Current Baseline Characteristics
