@@ -1,0 +1,14 @@
+{
+  "name": "euripid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript-first k6/browser performance harness with project-local templates.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/k6": "^1.7.0",
+    "typescript": "^6.0.2"
+  }
+}

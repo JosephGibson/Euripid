@@ -1,232 +1,171 @@
 # Euripid User Guide
 
-A 5-minute tour of running and extending Euripid from the command line.
+The new Euripid workflow is project-aware: you run a named scenario inside a named project, select an environment variant from that project's `project.config.json`, and choose a project-local load profile.
 
 ## Prerequisites
 
-- **Windows:** drop `k6.exe` into `bin/`. Get it from https://github.com/grafana/k6/releases.
-- **Linux/macOS:** install k6 on PATH (`brew install k6`, `apt install k6`, etc.) and use `pwsh` (PowerShell 7+).
-
-Verify:
-```powershell
-./scripts/run.ps1 -Scenario self-test -Environment self-test -Profile smoke
-```
-This hits k6's public demo (`quickpizza.grafana.com`) and exercises the full pipeline. If a zip lands in `results/`, you're good.
-
-## Your first test (tutorial scenario)
-
-The repo includes a **dummy example project** ("Acme Pizza Co.") so you can learn the file layout without wiring your own app yet.
-
-1. Run:
-   ```powershell
-   ./scripts/run.ps1 -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
+1. Install repo tooling:
+   ```bash
+   npm install
    ```
-2. Open **`src/scenarios/first-test-tutorial.js`** — it is a line-by-line walkthrough: what to import, how `buildOptions` ties to `config/profiles`, how `default` maps to one browser iteration, how `withTransaction` feeds the HTML report, and how `handleSummary` writes into `results/<runId>/`.
-3. Copy that scenario file as a starting point for a real flow; point a new environment JSON at your `baseUrl` (see `config/environments/example-tutorial.json` as a template).
+2. Make k6 available:
+   - Windows: `./scripts/run.ps1` will download the latest Grafana `k6.exe` into `bin/` if needed.
+   - Linux/macOS: install `k6` on PATH or place it at `bin/k6`, and use PowerShell 7 (`pwsh`) to run `run.ps1`.
 
-The **`self-test`** scenario stays a minimal health check; **`first-test-tutorial`** is the teaching script.
+## First run
+
+```powershell
+./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
+```
+
+This hits `quickpizza.grafana.com` and validates the rewritten harness path: project config loading, profile validation, browser startup, summary generation, and project-local artifact writing.
+
+## Tutorial path
+
+```powershell
+./scripts/run.ps1 -Project template-project -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
+```
+
+Then open [projects/template-project/scenarios/first-test-tutorial.ts](/home/joker/Projects/Euripid/projects/template-project/scenarios/first-test-tutorial.ts). It is the committed onboarding scenario for the new architecture.
 
 ## Command-line reference
 
-```
-./scripts/run.ps1 -Scenario <name> -Environment <name> -Profile <name> [options]
+```text
+./scripts/run.ps1 -Project <project> -Scenario <scenario> -Environment <env-key> -Profile <profile> [options]
 ```
 
 ### Required flags
 
-| Flag           | Description                                                       |
-|----------------|-------------------------------------------------------------------|
-| `-Scenario`    | Scenario file under `src/scenarios/` (without `.js`).             |
-| `-Environment` | Environment JSON under `config/environments/` (without `.json`).  |
-| `-Profile`     | Profile JSON under `config/profiles/` (without `.json`).          |
+| Flag | Meaning |
+|---|---|
+| `-Project` | Project directory under `projects/` |
+| `-Scenario` | Scenario file under `projects/<project>/scenarios/` without `.ts` |
+| `-Environment` | Named environment variant inside `projects/<project>/project.config.json` |
+| `-Profile` | Profile JSON under `projects/<project>/profiles/` without `.json` |
 
 ### Optional flags
 
-| Flag           | Description                                                       |
-|----------------|-------------------------------------------------------------------|
-| `-DataFile`    | CSV file under `data/`. Default: `users.csv`.                     |
-| `-RunName`     | Friendly tag baked into the run ID and zip filename.              |
-| `-NoBanner`    | Suppress the ASCII startup banner.                                |
-| `-NoZip`       | Keep the loose run directory but skip zip packaging.              |
-| `-Quiet`       | Suppress console output (errors still print). Log file is full.   |
-| `-Verbose`     | Print `[DEBUG]` lines (built-in PowerShell common parameter).     |
-| `-LogLevel`    | Override `logging.level` for k6 (`EURIPID_LOG_LEVEL`: error/warn/info/debug). |
-| `-DisableScenarioErrorLog` | Suppress structured `EURIPID_ERROR` JSON lines in k6 output (captured in `k6-console.log`). |
-| `-IncludeUserContextInLogs` | Allow username/role hints in error lines (`EURIPID_INCLUDE_USER_CONTEXT`). Passwords are never logged. |
+| Flag | Meaning |
+|---|---|
+| `-DataFile` | CSV filename under `projects/<project>/data/`; if omitted, the runner uses `project.defaultDataFile` when present |
+| `-RunName` | Friendly tag prefixed into the run ID |
+| `-NoBanner` | Suppress the ASCII startup banner |
+| `-NoZip` | Keep the loose run directory but skip zip packaging |
+| `-Quiet` | Suppress non-error console output |
+| `-Verbose` | Built-in PowerShell switch for `[DEBUG]` logging |
+| `-LogLevel` | Override `EURIPID_LOG_LEVEL` |
+| `-DisableScenarioErrorLog` | Suppress structured `EURIPID_ERROR` lines in k6 output |
+| `-IncludeUserContextInLogs` | Allow username/role hints in structured error lines |
 
-### Built-in PowerShell help
+### Examples
+
+Smoke self-test:
 
 ```powershell
-Get-Help ./scripts/run.ps1 -Full
-Get-Help ./scripts/run.ps1 -Examples
+./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
 ```
 
-## Examples
+Tutorial walkthrough:
 
-**Smoke test against staging:**
 ```powershell
-./scripts/run.ps1 -Scenario browser-login -Environment staging -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
 ```
 
-**Full load test, tagged for a release:**
+Login sample under ramped load:
+
 ```powershell
-./scripts/run.ps1 -Scenario browser-login -Environment staging -Profile load -RunName release-123
+./scripts/run.ps1 -Project template-project -Scenario browser-login -Environment staging -Profile load -RunName release-123
 ```
 
-**Quiet CI run, no banner, no zip (let CI archive the dir directly):**
-```powershell
-./scripts/run.ps1 -Scenario browser-login -Environment staging -Profile load -NoBanner -NoZip -Quiet
-```
+## Project config model
 
-**Verbose debug:**
-```powershell
-./scripts/run.ps1 -Scenario self-test -Environment self-test -Profile smoke -Verbose
-```
+Each project owns a `project.config.json` with two responsibilities:
 
-## Output
+1. `project` metadata such as `key`, `name`, and optional `defaultDataFile`
+2. an `environments` map keyed by runtime environment name
 
-Each run produces `results/<runId>/` containing:
-
-```
-environment.json     snapshot of the env config used
-profile.json         snapshot of the load profile used
-data.csv             snapshot of the CSV used (only when -DataFile exists)
-k6-stream.json       raw k6 event stream (every metric, every check)
-k6-console.log       captured k6 console output (includes `EURIPID_ERROR` JSON when enabled)
-euripid.log          structured orchestrator log (timestamped, tagged)
-summary.html         local Euripid HTML report
-summary.json         slim k6 summary as JSON
-screenshots/         screenshots from BasePage.screenshot() calls
-```
-
-Unless `-NoZip` is set, the directory is also zipped to `results/<runId>.zip`.
-
-The `runId` format is `<runName>-<scenario>-<environment>-<profile>-<timestamp>`, so runs sort and grep cleanly.
-
-## Reports
-
-Euripid produces three report outputs per run. All three are generated by `handleSummary` in `src/lib/summary.js`, which every scenario re-exports. The orchestrator sets `RUN_OUTPUT_DIR` so reports land in the correct per-run directory.
-
-### HTML report (`summary.html`)
-
-The primary human-readable output. Generated by Euripid's local vendored HTML report renderer. Open it in any browser.
-
-**What it contains:**
-
-- **Title** — derived from the environment filename (e.g. "Euripid — staging"). Set automatically; no configuration needed.
-- **Checks table** — every `check()` call from your scenario, with pass/fail counts and pass rate. Checks come from `assertVisible`, `assertText`, `assertHidden`, and any manual `check()` calls.
-- **Thresholds** — pass/fail for each threshold defined in the profile JSON. Failed thresholds cause k6 to exit non-zero.
-- **Groups** — collapsible tree matching your `withTransaction` / `withNavigation` / `withUserAction` / `withPageLoad` nesting. Each group shows its own request timings. This is the primary way to see per-step performance.
-- **Custom metrics** — every Trend, Counter, and Rate from `src/lib/metrics.js` appears as a row with aggregate stats (avg, min, med, max, p90, p95). The typed transaction Trends show as separate rows:
-
-| Metric row | What it measures | Populated by |
-|---|---|---|
-| `transaction_duration` | Outer journey timing | `withTransaction` |
-| `navigation_duration` | Full-page navigations | `withNavigation` |
-| `user_action_duration` | Clicks, typing, form submits | `withUserAction` |
-| `page_load_duration` | Post-action settling / assertions | `withPageLoad` |
-| `flow_login_duration` | Login credential entry time | `login-flow.js` |
-| `flow_total_duration` | End-to-end flow wall clock | `login-flow.js` |
-
-- **Built-in browser metrics** — k6/browser automatically collects Web Vitals (LCP, FCP, CLS, TTFB, FID, INP) and HTTP request timings. These appear as `browser_web_vital_*` and `browser_http_req_*` rows without any extra code.
-
-**How groups and metrics relate:**
-
-Groups show the *structure* of your journey (which steps ran, nested under which parent). Metrics show the *aggregate numbers* across all VUs and iterations. Outer journey groups typically map to `transaction_duration{transaction:<journey_name>}` samples, while typed child steps map to their own typed metric rows.
-
-### JSON summary (`summary.json`)
-
-Machine-readable version of the same data in the HTML report. It is slim by default so long runs do not persist the entire raw k6 object. Set `EURIPID_WRITE_FULL_SUMMARY=true` if you need the full raw payload. Useful for:
-
-- **CI pipelines** — parse thresholds programmatically to gate deployments.
-- **Dashboards** — feed into Grafana, Datadog, or custom tooling.
-- **Diffing** — compare two runs by diffing their JSON summaries.
-
-Structure (top-level keys):
+Example:
 
 ```json
 {
-  "metrics": {
-    "transaction_duration": { "avg": 1234.5, "min": 800, "max": 2000, "p(90)": 1800, "p(95)": 1900 },
-    "navigation_duration": { ... },
-    "checks": { "passes": 5, "fails": 0, "value": 1 },
-    ...
+  "project": {
+    "key": "template-project",
+    "name": "Template Project",
+    "defaultDataFile": "users.csv"
   },
-  "root_group": {
-    "name": "",
-    "groups": {
-      "journey_google_search": {
-        "groups": {
-          "navigate_to_google": { ... },
-          "homepage_ready": { ... },
-          ...
-        },
-        "checks": { ... }
+  "environments": {
+    "staging": {
+      "name": "staging",
+      "baseUrl": "https://staging.example.com",
+      "authUrl": "https://staging.example.com/login",
+      "timeouts": {
+        "navigation": 30000,
+        "action": 15000,
+        "assertion": 10000
       }
     }
   }
 }
 ```
 
-Every custom Trend, Counter, and Rate is under `metrics`. The group hierarchy is under `root_group`. Checks are nested inside the group where they were called.
+There is no separate `environments/` folder in the new layout.
 
-### Console text summary (stdout)
+## Output
 
-Printed to the terminal during the run and captured in `k6-console.log`. Generated by Euripid's local vendored text summary helper. Shows a compact table of all metrics with the same aggregates as the JSON summary. Useful for quick pass/fail in CI logs without opening a file.
+Each orchestrated run writes to:
 
-### Raw event stream (`k6-stream.json`)
-
-Not a summary — this is the raw k6 `--out json` stream. Every metric sample, every check result, every HTTP request is a separate JSON line. Use it for:
-
-- **Time-series analysis** — plot metric values over the duration of the test.
-- **Per-VU debugging** — filter by `"tags":{"vu":"3"}` to see what a specific VU did.
-- **Post-hoc threshold checks** — run custom aggregations that profiles don't support.
-
-This file can be large under load (one line per metric sample per VU per iteration). The HTML/JSON summaries are always more practical for quick review.
-
-### Screenshots (`screenshots/`)
-
-Captured by `BasePage.screenshot(name)` on failure or on demand. Filenames include the VU ID and timestamp: `login-failure-vu3-1712345678901.png`. Only populated when a flow or scenario explicitly calls `screenshot()` — typically in a `catch` block after a failure.
-
-### Orchestrator log (`euripid.log`)
-
-Not a k6 report — this is the orchestrator's own log. Every `[LOG]`, `[STEP]`, `[OK]`, `[WARN]`, `[ERROR]`, and `[DEBUG]` line from `run.ps1` is recorded with ISO timestamps. Useful for diagnosing orchestrator-level issues (wrong paths, missing binary, zip failures) separately from k6-level issues.
-
-### How `handleSummary` works
-
-Every scenario re-exports the shared `handleSummary` from `src/lib/summary.js`:
-
-```js
-import { handleSummary as makeSummary } from '../lib/summary.js';
-export const handleSummary = makeSummary;
+```text
+projects/<project>/results/<runId>/
 ```
 
-k6 calls this function once after the test ends, passing the complete summary data object. The function returns a map of file paths to content — k6 writes each one. The shared implementation writes `summary.html`, `summary.json`, and the console text summary. Never replace this with a custom `handleSummary` unless you have a specific reason — the shared version respects `RUN_OUTPUT_DIR` for parallel-run safety.
+Typical contents:
 
-## Logging tags
+```text
+project.config.json   snapshot of the full project config
+environment.json      resolved environment variant used for the run
+profile.json          snapshot of the selected profile
+data.csv              resolved CSV snapshot when data was supplied
+k6-stream.json        raw k6 event stream
+k6-console.log        captured k6 console output
+euripid.log           orchestrator log
+summary.html          shared HTML report
+summary.json          slim machine-readable summary
+screenshots/          screenshots from BasePage.screenshot()
+```
 
-Console output uses tagged, color-coded prefixes that mirror the entries in `euripid.log`:
+Unless `-NoZip` is set, the runner also creates:
 
-| Tag       | Color    | Meaning                                              |
-|-----------|----------|------------------------------------------------------|
-| `[LOG]`   | Blue     | Routine progress message                             |
-| `[STEP]`  | Magenta  | Major phase boundary (resolved k6, invoking k6, etc.)|
-| `[OK]`    | Green    | Success                                              |
-| `[WARN]`  | Yellow   | Non-fatal issue (k6 exited non-zero, etc.)           |
-| `[ERROR]` | Red      | Fatal error. Always printed even with `-Quiet`.      |
-| `[DEBUG]` | Dark gray| Only with `-Verbose`. Internal details.              |
+```text
+projects/<project>/results/<runId>.zip
+```
 
-The log file (`euripid.log`) records every line in plain text with ISO timestamps, regardless of console verbosity.
+## Reports
 
-## Adding new scenarios, pages, profiles, environments
+`handleSummary()` from [`harness/reporting/summary.ts`](/home/joker/Projects/Euripid/harness/reporting/summary.ts) writes the shared report set. Scenarios should re-export it instead of rolling their own.
 
-See [`docs/RECIPES.md`](RECIPES.md). Each recipe is copy-paste and self-contained.
+### What to expect in the report
 
-## Exit codes
+- Checks and thresholds
+- Custom metrics such as `transaction_duration`, `navigation_duration`, `user_action_duration`, and `page_load_duration`
+- Built-in browser metrics such as `browser_web_vital_lcp`, `browser_web_vital_fcp`, and HTTP timing rows
 
-| Code | Meaning                                                       |
-|------|---------------------------------------------------------------|
-| 0    | Success                                                       |
-| 1    | k6 ran but exited non-zero (thresholds failed or runtime err) |
-| 2    | Pre-flight failure (missing input, k6 binary not found)       |
-| 3    | k6 succeeded but zip packaging failed                         |
+### Important note about transaction helpers
+
+Current k6 rejects async `group()` callbacks in browser scenarios. Because of that, Euripid's transaction helpers now record tagged Trend metrics instead of trying to preserve async group nesting. The main structural signal in reports is the named metric rows and their transaction tags, not a nested browser-group tree.
+
+## Direct k6 validation
+
+If you already have a working k6 binary and want to validate a scenario without the PowerShell runner, you can run it directly:
+
+```bash
+mkdir -p projects/template-project/results/direct-self-test
+bin/k6 run \
+  -e PROJECT=template-project \
+  -e ENVIRONMENT=self-test \
+  -e PROJECT_CONFIG_FILE=projects/template-project/project.config.json \
+  -e PROFILE_FILE=projects/template-project/profiles/smoke.json \
+  -e RUN_OUTPUT_DIR=projects/template-project/results/direct-self-test \
+  projects/template-project/scenarios/self-test.ts
+```
+
+`RUN_OUTPUT_DIR` must already exist before `k6` writes `summary.html` and `summary.json`, which is why the example creates the directory first. That direct path is useful for harness debugging, but the supported day-to-day interface remains `scripts/run.ps1`.

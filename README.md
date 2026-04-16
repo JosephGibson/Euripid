@@ -1,74 +1,66 @@
 # Euripid
 
-**v0.1.0 (alpha)** — k6 + `k6/browser` performance testing template with a Page Object Model layout, JSON-driven config, CSV-driven VU data, local vendored runtime helpers, typed transaction metrics, and a PowerShell orchestrator that packages every run into a timestamped zip.
+TypeScript-first k6 + `k6/browser` performance framework with a shared harness and copyable project directories.
 
-> **Humans:** start at [`docs/USAGE.md`](docs/USAGE.md) for the CLI tour and flag reference.
-> **AI agents:** start at [`AGENTS.md`](AGENTS.md). Extension recipes live in [`docs/RECIPES.md`](docs/RECIPES.md). Each top-level directory has a one-paragraph `README.md` for orientation.
+> Humans: start at [`docs/USAGE.md`](docs/USAGE.md).
+> AI agents: start at [`AGENTS.md`](AGENTS.md).
 
 ## Status
 
-v0.1 is the current **alpha baseline**. It already includes vendored local runtime helpers for CSV/report generation, stricter config validation, safer summary persistence, and more reliable browser-flow timing. `scripts/run.ps1` is cross-OS pwsh. See [`CHANGELOG.md`](CHANGELOG.md) for the current baseline summary.
+Euripid is in an active rewrite from the legacy v0.1 alpha layout to the new `harness/` + `projects/` model. The new structure is now the authoritative workflow. The old top-level `config/`, `data/`, and `src/` trees remain in the repo only as transition/reference material until retirement.
 
 ## Why k6/browser instead of Playwright
 
-Real Playwright cannot run inside a k6 VU — k6 executes JS on its own Goja runtime, not Node. `k6/browser` is a Chromium automation module with a Playwright-shaped API that runs as a first-class k6 protocol, so browser timings (LCP, FCP, etc.) flow into the same metrics stream as your checks and thresholds. Tradeoff: Chromium-only, API lags real Playwright. If you ever need true Playwright (functional regression, cross-browser, traces), run it as a separate sibling suite.
+Real Playwright cannot run inside a k6 VU. k6 executes JavaScript on its own runtime, not Node, so browser automation here still happens through `k6/browser`. That keeps browser timings, checks, thresholds, and Web Vitals in the same k6 run instead of splitting them across multiple tools.
 
-## Layout
+## New Layout
 
-```
-config/         JSON: environments + load profiles
-data/           CSV: per-VU fan-out data (users, payloads)
-src/pages/      POM page classes (BasePage, LoginPage, ...)
-src/flows/      Composed user journeys built from POM
-src/lib/        config loader, CSV/SharedArray loader, custom metrics, summary writer
-src/scenarios/  k6 entry points (one scenario per run)
-scripts/        run.ps1 orchestrator
-results/        per-run zips + loose run dirs (gitignored)
-bin/            bundled k6.exe on Windows (gitignored on *nix)
-docs/           RECIPES.md and other agent/human docs
+```text
+harness/                    shared TypeScript runtime, reporting, types, vendor helpers
+projects/
+  template-project/         canonical bootstrap project and committed validation target
+scripts/run.ps1             project-aware orchestrator
+docs/                       usage, recipes, and planning docs
+
+legacy reference only:
+config/ data/ src/
 ```
 
-## Using this template
+## Quick Start
 
-Euripid is consumed as a **clone-and-modify template**, not a dependency.
-
-1. Clone or fork the repo into your project workspace.
-2. Drop `k6.exe` into `bin/` (Windows) or install k6 on PATH.
-3. Verify the toolchain end-to-end with no setup:
-   ```powershell
-   ./scripts/run.ps1 -Scenario self-test -Environment self-test -Profile smoke
+1. Install Node dependencies:
+   ```bash
+   npm install
    ```
-   This runs against `quickpizza.grafana.com` (k6's public demo target). If the zip lands in `results/`, you're good.
-4. Walk through your **first scripted test** (dummy "Acme Pizza Co." project, heavily commented):
+2. Make k6 available:
+   - Windows: `scripts/run.ps1` will download the latest Grafana `k6.exe` into `bin/` if it is missing.
+   - Linux/macOS: install `k6` on PATH or place a `k6` binary at `bin/k6`, and use PowerShell 7 (`pwsh`) to run the orchestrator.
+3. Run the committed end-to-end validation project:
    ```powershell
-   ./scripts/run.ps1 -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
+   ./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
    ```
-   Open `src/scenarios/first-test-tutorial.js` and read it top-to-bottom — it explains imports, options, transactions, checks, and what to change for a real app.
-5. Add your environments under `config/environments/` and load profiles under `config/profiles/`.
-6. Add page objects in `src/pages/` and compose them into flows in `src/flows/`.
-7. Add a scenario file in `src/scenarios/` that wires it together (or copy `first-test-tutorial.js`).
+4. Read the tutorial scenario:
+   [projects/template-project/scenarios/first-test-tutorial.ts](/home/joker/Projects/Euripid/projects/template-project/scenarios/first-test-tutorial.ts)
 
-Recipes for each step live in [`docs/RECIPES.md`](docs/RECIPES.md).
+## Working Model
 
-## Running
+- Shared framework code lives in `harness/`.
+- App-specific code lives inside one project directory under `projects/`.
+- Projects may import only the stable harness entrypoints:
+  `harness/index.ts`, `harness/data.ts`, and `harness/types.ts`.
+- Projects must not import from sibling projects.
+- `project.config.json` owns project metadata and named environment variants.
+- `profiles/` remains project-local JSON for load shapes and thresholds.
+- `RUN_OUTPUT_DIR` still governs artifact placement, but outputs now live under `projects/<project>/results/`.
 
-```powershell
-./scripts/run.ps1 -Scenario browser-login -Environment staging -Profile load
-```
+## Notes On Transactions
 
-Optional `-DataFile users.csv` and `-RunName release-123`.
+The transaction helpers (`withTransaction`, `withNavigation`, `withUserAction`, `withPageLoad`) still provide named timing boundaries and tagged Trend metrics. On current k6, async browser callbacks cannot be wrapped with `k6/group()`, so these helpers intentionally record metric rows instead of relying on async group nesting.
 
-The orchestrator:
-1. Resolves k6 from `bin/k6.exe` on Windows or PATH on Linux/macOS.
-2. Creates `results/<runId>/` and snapshots the resolved env JSON, profile JSON, and data CSV into it.
-3. Invokes k6 with `RUN_OUTPUT_DIR` set so the scenario's `handleSummary` and `BasePage.screenshot` write directly into the per-run dir — parallel runs are race-free.
-4. Streams raw events to `<runId>/k6-stream.json`.
-5. Packages everything into `results/<runId>.zip`.
+## Legacy Tree
 
-## Auth
-
-`LoginPage` is intentionally generic form-login. Override `LoginPage.SELECTORS` or subclass per project. For OIDC/SSO/token flows, replace the page object with a one-time setup hook that mints a token and seeds storage state.
+The legacy top-level `config/`, `data/`, and `src/` directories are still present so the rewrite can be compared against the previous baseline. New work should go into `harness/` and `projects/` unless you are explicitly maintaining the old reference implementation.
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE) (the latter covers the bundled k6 binary if you redistribute the repo with `bin/k6.exe` populated).
+MIT. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).

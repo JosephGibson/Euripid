@@ -1,5 +1,5 @@
 # data/
 
-Per-VU CSV datasets. Loaded once via `SharedArray` in `src/lib/data.js`, then `rowForVU()` picks one row per VU using `(__VU - 1) % length`. Header row required. Pass with `-DataFile <name>.csv` in `run.ps1`.
+Legacy v0.1 reference tree. New rewrite work should use `projects/<project>/data/` instead.
 
-`users.csv` is committed with dummy placeholder data so the template runs out of the box. When you add real credential CSVs, do **not** commit them — add them to `.gitignore` or keep them local-only.
+Project-local CSV datasets are still loaded through `SharedArray`, but the stable entrypoint is now [`harness/data.ts`](/home/joker/Projects/Euripid/harness/data.ts), not `src/lib/data.js`.

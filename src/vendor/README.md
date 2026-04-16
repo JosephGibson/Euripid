@@ -1,3 +1,5 @@
-# vendor/
+# src/vendor/
 
-Local vendored runtime helpers so k6 scenarios do not depend on third-party URL imports at init time. Each module is a minimal, behavior-compatible replacement for the upstream dependency it replaces. See [`NOTICE`](../../NOTICE) for license and provenance details.
+Legacy v0.1 vendored helper tree. The rewrite now vendors active runtime helpers under `harness/vendor/`.
+
+Keep this directory only as reference while the legacy layout remains in the repo.

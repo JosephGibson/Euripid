@@ -1,3 +1,4 @@
-Drop `k6.exe` here for Windows zero-install.
+`bin/` is the local binary cache.
 
-On Linux/macOS, install k6 on PATH instead — `scripts/run.ps1` resolves it via `Get-Command` when not on Windows.
+- Windows: `scripts/run.ps1` downloads the latest Grafana `k6.exe` here if it is missing.
+- Linux/macOS: you may place a local `k6` binary here, or install `k6` on PATH.

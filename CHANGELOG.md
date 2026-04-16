@@ -4,6 +4,16 @@ All notable changes to Euripid.
 
 Versioning has been reset to **0.1.x** for alpha, milestone-driven development. Earlier internal iteration numbers have been retired from the public project history so the repo now reflects its current maturity more honestly.
 
+## [Unreleased]
+
+### Rewrite In Progress
+- Added the new TypeScript-first rewrite scaffold with `package.json`, `tsconfig.json`, `harness/`, and `projects/`.
+- Added `projects/template-project/` as the committed validation project with project-local config, profiles, data, pages, flows, scenarios, and results.
+- Ported shared runtime primitives into the rewrite-era harness and exposed stable public entrypoints via `harness/index.ts`, `harness/data.ts`, and `harness/types.ts`.
+- Refactored `scripts/run.ps1` to a project-aware CLI and project-local artifact layout.
+- Rewrote agent and human docs to teach the new `projects/template-project/` workflow.
+- Kept the legacy top-level `config/`, `data/`, and `src/` trees in place as reference material during the transition.
+
 ## [0.1.0] - 2026-04-15
 
 ### Status

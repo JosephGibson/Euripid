@@ -1,5 +1,10 @@
 # config/
 
-Static-per-run JSON. `environments/` holds URLs, auth endpoints, timeouts — one file per target environment, identical schema across files. `profiles/` holds k6 load shapes — VUs, stages, thresholds. Filenames (without `.json`) are what `-Environment` and `-Profile` take in `run.ps1`. Schemas: see [`docs/RECIPES.md`](../docs/RECIPES.md#add-a-new-environment).
+Legacy v0.1 reference tree. New rewrite work should not add files here.
 
-**Tutorial:** `environments/example-tutorial.json` is a copy-paste-friendly dummy project (QuickPizza demo URL) paired with [`src/scenarios/first-test-tutorial.js`](../src/scenarios/first-test-tutorial.js).
+The authoritative configuration model is now:
+
+- `projects/<project>/project.config.json` for named environment variants and project metadata
+- `projects/<project>/profiles/*.json` for load profiles
+
+Keep this directory only if you are explicitly comparing the rewrite against the old layout.

@@ -2,10 +2,16 @@
 results/*/
 results/*.zip
 !results/.gitkeep
+projects/*/results/*/
+projects/*/results/*.zip
+!projects/*/results/.gitkeep
 
 # k6 binary
 bin/k6
 bin/k6.exe
+
+# Node tooling
+node_modules/
 
 # OS artifacts
 .DS_Store

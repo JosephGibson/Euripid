@@ -1,3 +1,5 @@
-# flows/
+# src/flows/
 
-Composed user journeys. A flow imports page objects, runs them in sequence, wraps the outer journey with `withTransaction()` and inner steps with the typed helpers from `src/lib/transactions.js`, records legacy timings via `src/lib/metrics.js`, logs failures with `logScenarioError()` from `src/lib/logging.js`, and screenshots on failure. Flows are pure functions of `(page, env, ...inputs)` — they don't know about k6 scenarios or VU IDs. See [`docs/RECIPES.md`](../../docs/RECIPES.md#add-a-new-flow).
+Legacy v0.1 flow tree. New flows belong under `projects/<project>/flows/`.
+
+Use the rewrite docs in [`docs/RECIPES.md`](../../docs/RECIPES.md) and the committed example flow in [projects/template-project/flows/login-flow.ts](/home/joker/Projects/Euripid/projects/template-project/flows/login-flow.ts) instead of adding new work here.

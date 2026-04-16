@@ -1,13 +1,13 @@
-# lib/
+# src/lib/
 
-Shared init-context infrastructure.
+Legacy v0.1 shared runtime helpers. New rewrite work should target `harness/runtime/` and `harness/reporting/` instead.
 
-- `config.js` reads environment + profile JSON, validates them against required-field schemas, and builds the k6 `options` object via `buildOptions()`.
-- `data.js` loads CSV via `SharedArray` (read once, shared across all VUs) and exposes `rowForVU()`. CSV parsing now uses a vendored local helper instead of a remote runtime import.
-- `metrics.js` defines custom Trends and Counters used by flows. Includes `transaction_duration` for outer journey wrappers, typed Trends (`navigation_duration`, `user_action_duration`, `page_load_duration`), and error counters (`scenario_errors`, `flow_errors`, `data_errors`).
-- `transactions.js` provides four helpers that wrap k6 `group()` and record tagged Trends: `withTransaction` (outer journey wrapper), `withNavigation` (page loads), `withUserAction` (clicks/typing/submits), `withPageLoad` (post-action settling). Typed helpers record only their own Trend so nested steps are not double-counted in `transaction_duration`. See `docs/RECIPES.md` for when to use each.
-- `assertions.js` provides `assertVisible`, `assertHidden`, `assertText`, `assertElement` — wait for element state with a three-level timeout hierarchy (per-call > `env.timeouts.assertion` > 10 s), record k6 `check()`, optionally throw on failure (`failFast`).
-- `logging.js` resolves optional `environment.logging` + `EURIPID_*` env overrides and emits structured `EURIPID_ERROR` lines for failures.
-- `summary.js` exports a shared `handleSummary` that writes to `__ENV.RUN_OUTPUT_DIR` (set by the orchestrator), defaulting to `results/` for direct k6 invocations. Summary rendering now uses vendored local helpers and persists a slim `summary.json` by default; set `EURIPID_WRITE_FULL_SUMMARY=true` to restore the full raw k6 object when needed.
+Current equivalents:
 
-These modules are init-context-sensitive — import them at the top of scenario files, never lazily.
+- `src/lib/config.js` -> [`harness/runtime/config.ts`](/home/joker/Projects/Euripid/harness/runtime/config.ts)
+- `src/lib/data.js` -> [`harness/runtime/data.ts`](/home/joker/Projects/Euripid/harness/runtime/data.ts)
+- `src/lib/metrics.js` -> [`harness/runtime/metrics.ts`](/home/joker/Projects/Euripid/harness/runtime/metrics.ts)
+- `src/lib/transactions.js` -> [`harness/runtime/transactions.ts`](/home/joker/Projects/Euripid/harness/runtime/transactions.ts)
+- `src/lib/assertions.js` -> [`harness/runtime/assertions.ts`](/home/joker/Projects/Euripid/harness/runtime/assertions.ts)
+- `src/lib/logging.js` -> [`harness/runtime/logging.ts`](/home/joker/Projects/Euripid/harness/runtime/logging.ts)
+- `src/lib/summary.js` -> [`harness/reporting/summary.ts`](/home/joker/Projects/Euripid/harness/reporting/summary.ts)

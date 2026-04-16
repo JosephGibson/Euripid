@@ -1,106 +1,113 @@
 # AGENTS.md
 
-Entry point for AI/LLM agents working on Euripid. Read this first; it links out to deeper docs only when needed.
+Entry point for AI/LLM agents working on Euripid.
 
 ## What this repo is
 
-**Euripid v0.1 (alpha)** — a k6 + `k6/browser` performance testing template. Browser-level perf flows are written as Page Objects, composed into flows, exposed as k6 scenario entry points, and orchestrated by a PowerShell script that packages every run into a timestamped zip. Consumed as a clone-and-modify template, not a dependency.
+Euripid is now a **TypeScript-first** k6 + `k6/browser` framework built around:
 
-**Not Playwright.** k6 runs JS on Goja, not Node — the npm `playwright` package cannot be imported. `k6/browser` is a Chromium automation API with Playwright-shaped semantics. When in doubt, prefer k6 docs over Playwright docs.
+1. a shared repo-level harness under `harness/`
+2. self-contained testing projects under `projects/`
+3. a committed `projects/template-project/` that users copy as their bootstrap
 
-**Status:** v0.1 alpha. Current baseline includes local vendored runtime helpers, stricter validation, safer summary handling, and more reliable browser-flow behavior. See `CHANGELOG.md` for the current baseline summary.
+The old top-level `config/`, `data/`, and `src/` trees are still in the repo, but they are **legacy reference material**, not the target architecture.
 
-## Mental model (read this once)
+## Non-negotiable runtime facts
 
+- **Not Playwright.** Do not import the npm `playwright` package into runtime code.
+- **k6 runtime code is not Node runtime code.** Node is acceptable for dev tooling, type checking, and repo scripts, but not inside scenarios/pages/flows that execute in k6.
+- **`open()` stays init-context only.** Keep file reads in top-level module scope or `SharedArray` init callbacks.
+- **CSV data still goes through `SharedArray`.** Use the shared loader exposed via [`harness/data.ts`](/home/joker/Projects/Euripid/harness/data.ts).
+- **Browser scenarios still need Chromium options.** Use `buildOptions()` from the harness instead of assembling browser scenario config by hand.
+- **One scenario per file.** Do not collapse multiple runnable scenarios into one file unless the user explicitly wants that design change and understands the tradeoff.
+- **Output paths must respect `RUN_OUTPUT_DIR`.** Anything that writes artifacts must remain run-isolated.
+- **No sibling-project imports.** `project -> harness` is allowed; `project A -> project B` is forbidden.
+
+## Mental model
+
+```text
+harness/
+  index.ts        stable runtime/reporting entrypoint for project code
+  data.ts         stable SharedArray data-loader entrypoint
+  types.ts        stable type-only entrypoint
+  runtime/        config loading, assertions, metrics, logging, transactions, page-core
+  reporting/      shared handleSummary
+  vendor/         vendored k6-safe helpers
+
+projects/
+  template-project/
+    project.config.json   project metadata + named environment variants
+    profiles/             load-shape JSON
+    data/                 project-local CSV datasets
+    pages/                app-specific page objects
+    flows/                app-specific user journeys
+    scenarios/            k6 entry points
+    metrics.ts            project-local custom metrics
+    results/              per-run output dirs and zips
+
+scripts/run.ps1           primary orchestrator
 ```
-config/   →  static-per-run JSON (environments, load profiles)
-data/     →  fanned-out-per-VU CSV (users, payloads)
-src/lib/  →  init-context infrastructure
-            ├ config.js      reads env+profile JSON, validates, builds k6 options
-            ├ data.js        SharedArray-backed CSV loader, rowForVU()
-            ├ metrics.js     custom Trends and Counters
-            ├ transactions.js  withTransaction/Navigation/UserAction/PageLoad — k6 group + typed Trends
-            ├ assertions.js  assertVisible/Text/Hidden — configurable-timeout element checks
-            ├ logging.js     structured EURIPID_ERROR lines + scenario_errors counter
-            └ summary.js     shared handleSummary that respects RUN_OUTPUT_DIR
-src/pages/      POM page classes. Each extends BasePage, holds locators + actions.
-src/flows/      Composed user journeys. Import pages, record timings via metrics.js.
-src/scenarios/  k6 entry points. ONE scenario per file. Re-export options + handleSummary.
-scripts/run.ps1 Orchestrator. Resolves k6, runs scenario, zips results.
-results/        Per-run dirs and zips. Gitignored.
-```
 
-The dataflow at runtime: `run.ps1` → creates `results/<runId>/` → sets `ENV_FILE` / `PROFILE_FILE` / `DATA_FILE` / `RUN_OUTPUT_DIR` env vars → invokes k6 on a scenario file → scenario imports `config.js` (reads + validates JSON at init) and `data.js` (reads CSV at init via SharedArray) → scenario's default function instantiates pages and runs the flow → `handleSummary` from `summary.js` writes HTML + JSON directly into `RUN_OUTPUT_DIR` → `run.ps1` zips the dir.
+Runtime flow:
 
-## Hard constraints (violating these breaks the build)
+`run.ps1` -> resolves project/scenario/profile/environment -> sets `PROJECT`, `ENVIRONMENT`, `PROJECT_CONFIG_FILE`, `PROFILE_FILE`, optional `DATA_FILE`, and `RUN_OUTPUT_DIR` -> invokes k6 on a project-local scenario -> harness config loads and validates project config + profile at init -> scenario runs pages/flows -> shared `handleSummary` writes artifacts into the project-local result directory.
 
-1. **k6 file IO is init-context only.** `open()` must be called at the top of a module, not inside `default` or any async function. `config.js` and `data.js` already follow this — preserve the pattern.
-2. **CSV data must go through `SharedArray`.** Never `JSON.parse(open(...))` a per-VU dataset directly — every VU re-parses and memory explodes. Use `src/lib/data.js`.
-3. **Browser scenarios need `options: { browser: { type: 'chromium' } }` on the scenario object.** `buildOptions()` in `config.js` adds this automatically. Don't bypass it.
-4. **One scenario per file.** Mixing scenarios in a single run is supported by k6 but explicitly out of scope for this library — keeps reasoning simple. If asked to add multi-scenario, push back and confirm.
-5. **No npm dependencies.** k6 imports work via URL. Don't introduce `package.json` or assume Node.
-6. **Output paths must respect `RUN_OUTPUT_DIR`.** `summary.js` and `BasePage.screenshot()` already do. Anything new that writes files must too — otherwise parallel runs race.
-7. **PowerShell stays `pwsh`-compatible.** Even though the current alpha is Windows-first, `run.ps1` should not regress on cross-OS compatibility. Branch on `$IsWindows` for OS-specific bits.
+## Stable harness entrypoints
 
-## How to add things
+Project code should import only from:
 
-See [`docs/RECIPES.md`](docs/RECIPES.md). It has copy-paste templates for:
-- New page object
-- New flow
-- New scenario
-- New environment
-- New profile
-- New CSV dataset
-- New custom metric
+- [`harness/index.ts`](/home/joker/Projects/Euripid/harness/index.ts) for runtime helpers and reporting
+- [`harness/data.ts`](/home/joker/Projects/Euripid/harness/data.ts) for `rowForVU()` / dataset loading
+- [`harness/types.ts`](/home/joker/Projects/Euripid/harness/types.ts) for type-only imports
+
+Do not deep-import internal harness files from projects unless the user explicitly asks to change the public boundary.
+
+## Current project contract
+
+Each project directory should be understandable on its own and should contain:
+
+- `project.config.json`
+- `profiles/`
+- `pages/`
+- `scenarios/`
+- `data/`
+- `results/`
+
+`flows/` and project-local `metrics.ts` are expected when the project needs them, even though the minimal contract above is the required core.
 
 ## How to run
 
 ```powershell
-./scripts/run.ps1 -Scenario browser-login -Environment staging -Profile load
+./scripts/run.ps1 -Project template-project -Scenario self-test -Environment self-test -Profile smoke
 ```
 
-Optional: `-DataFile users.csv`, `-RunName release-123`. Output lands in `results/<runId>.zip`.
+Tutorial path:
 
-**Self-test (no setup, no target app required):**
 ```powershell
-./scripts/run.ps1 -Scenario self-test -Environment self-test -Profile smoke
+./scripts/run.ps1 -Project template-project -Scenario first-test-tutorial -Environment example-tutorial -Profile smoke
 ```
-This hits `quickpizza.grafana.com` (k6's public demo) and verifies the entire toolchain — config loading, validation, browser startup, navigation, summary writing, and zip packaging — without needing any infrastructure.
 
-## File naming conventions
+## How to extend
 
-- Page classes: `PascalCase.js`, class name matches filename (`LoginPage.js` → `class LoginPage`).
-- Flows: `kebab-case.js`, exports a single async `run<n>Flow` function.
-- Scenarios: `kebab-case.js`, one per k6 entry point. Filename (without `.js`) is what `-Scenario` takes.
-- Config JSON: `kebab-case.json`. Filename (without `.json`) is what `-Environment` / `-Profile` take.
-- CSV: `kebab-case.csv`, header row required.
+Start with [`docs/RECIPES.md`](docs/RECIPES.md). The new recipes cover:
 
-## What NOT to do
+- new page objects
+- new flows
+- new scenarios
+- project environment variants inside `project.config.json`
+- project-local profiles
+- project-local CSV datasets
+- project-local custom metrics
 
-- Don't import `playwright` — it doesn't work in k6.
-- Don't add lazy `open()` calls inside flows or default functions.
-- Don't read CSVs without `SharedArray`.
-- Don't add `package.json`, `node_modules`, or any Node-specific tooling.
-- Don't combine scenarios in one k6 run unless explicitly asked.
-- Don't hardcode env-specific values into page objects or flows. Push them through `environment.json`.
-- Don't put credentials in committed JSON. `data/users.csv` is committed with dummy sample data; real credential CSVs should not be committed — add them to `.gitignore` or keep them local-only.
-- Don't write output files to hardcoded paths. Always honor `__ENV.RUN_OUTPUT_DIR` (defaulting to `results/` when unset).
-- Don't bypass the schema validation in `config.js` — if it rejects a profile, fix the profile, don't disable the check.
+## Important implementation notes
 
-## Known limitations
+- TypeScript is mandatory for new rewrite work.
+- `package.json` and Node-based tooling are now expected.
+- `scripts/run.ps1` remains the primary orchestration surface.
+- On current k6, async browser callbacks cannot be wrapped with `k6/group()`. The harness transaction helpers therefore emit tagged Trend metrics without async group nesting. Do not reintroduce async `group()` wrappers for browser flows.
+- Keep project-specific assets in the project directory. If something is genuinely shared across projects, move it into the harness.
+- Real credentials should not be committed. `projects/template-project/data/users.csv` is dummy sample data only.
 
-- No `run.sh`. Bash orchestrator is planned for a future release.
-- No CI workflow. Add when the consuming team has a target.
-- No multi-scenario runs.
+## Legacy directories
 
-## Per-directory orientation
-
-Each top-level directory has a one-paragraph `README.md` for agents that land in that folder cold. They are pointers, not duplicates of this file.
-
-## When iterating
-
-When asked to extend or modify this library:
-1. Confirm which constraint(s) above the change touches before writing code.
-2. Read the relevant per-directory README and `docs/RECIPES.md` section.
-3. Keep the existing patterns — new pages look like `LoginPage`, new scenarios look like `browser-login.js`, etc. Consistency is the point.
-4. If a request would break a constraint or a known limitation listed above, surface the conflict before complying.
+If you land in `config/`, `data/`, or `src/`, treat them as **legacy reference only** unless the task is explicitly about maintaining the pre-rewrite baseline. New implementation work should target `harness/` and `projects/`.

@@ -1,10 +1,12 @@
 # M0 - Core Architecture Lock Plan
 
-- Status: Completed
-- Archived record: [`docs/plans/archive/MILESTONE_0_CORE_ARCHITECTURE_LOCK_PLAN.md`](./archive/MILESTONE_0_CORE_ARCHITECTURE_LOCK_PLAN.md)
-- Scope closed: the architecture lock decisions are complete and no longer active work.
-
-The full M0 record now lives in the archive path above. Keep this stub so existing references remain valid.
+- Status: Completed (Archived)
+- Original scope: `M0 - Core Architecture Lock` only
+- Source of truth at close-out: `docs/plans/EURIPID_PLAN.md`
+- Out of scope: `M1 - Rewrite Skeleton`, `M2 - Shared Harness Runtime`, `M3 - Template Project Stub`, `M4 - Orchestration and Reporting`, `M5 - Documentation and Release Packaging`
+- Chosen defaults carried into implementation:
+  - Harness imports use explicit relative paths first.
+  - `scripts/run.ps1` remains the primary orchestration surface through the rewrite.
 
 <a id="baseline-inputs"></a>
 ## Baseline Inputs
@@ -13,7 +15,7 @@ The full M0 record now lives in the archive path above. Keep this stub so existi
 - Current shared implementation areas: `src/lib/`, `src/pages/`, `src/flows/`, `src/scenarios/`, `src/vendor/`
 - Current orchestration entrypoint: `scripts/run.ps1`
 - Current sample/tutorial scenarios named in the source plan: `self-test`, `first-test-tutorial`, `browser-login`, `google-example`
-- Governing source sections in `docs/plans/EURIPID_PLAN.md`: `1. Executive Direction`, `3. Locked Product Model`, `4. Locked Technical Direction`, `5. Non-Negotiable k6 Constraints`, `6. Target Repository Shape`, `7. Project Directory Contract`, `8. Runtime and Orchestration Model`, `9. TypeScript Implementation Strategy`, `11. Milestones`, `12. Cross-Milestone Acceptance Gates`, `13. Risks and Mitigations`, `14. Open Questions`
+- Governing source sections in `docs/plans/EURIPID_PLAN.md`: `1. Executive Direction`, `3. Locked Product Model`, `4. Locked Technical Direction`, `5. Non-Negotiable k6 Constraints`, `6. Target Repository Shape`, `7. Project Directory Contract`, `8. Runtime and Orchestration Model`, `9. TypeScript Implementation Strategy`, `11. Milestones`, `12. Cross-Milestone Acceptance Gates`, `13. Risks and Mitigations`, `14. Resolved Implementation Defaults`
 
 <a id="m0-objective"></a>
 ## M0 Objective
