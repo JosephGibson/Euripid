@@ -1,0 +1,12 @@
+{
+  "name": "Soak",
+  "description": "Longer steady-state profile for catching drift, leaks, and degradation over time.",
+  "executor": "constant-vus",
+  "vus": 3,
+  "duration": "20m",
+  "thresholds": {
+    "browser_web_vital_lcp": ["p(95)<4000"],
+    "browser_web_vital_fcp": ["p(95)<2500"],
+    "checks": ["rate>0.98"]
+  }
+}

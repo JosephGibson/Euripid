@@ -1,0 +1,77 @@
+{
+  "project": {
+    "key": "template-project",
+    "name": "Template Project",
+    "description": "Canonical bootstrap project for the Euripid rewrite.",
+    "defaultDataFile": "users.csv"
+  },
+  "environments": {
+    "dev": {
+      "name": "dev",
+      "baseUrl": "https://dev.example.com",
+      "authUrl": "https://dev.example.com/login",
+      "apiUrl": "https://dev.example.com/api",
+      "tenantId": "dev-tenant",
+      "timeouts": {
+        "navigation": 30000,
+        "action": 15000,
+        "assertion": 10000
+      },
+      "logging": {
+        "level": "error",
+        "logScenarioErrors": true,
+        "includeStack": true,
+        "includeUserContext": false
+      }
+    },
+    "staging": {
+      "name": "staging",
+      "baseUrl": "https://staging.example.com",
+      "authUrl": "https://staging.example.com/login",
+      "apiUrl": "https://staging.example.com/api",
+      "tenantId": "staging-tenant",
+      "timeouts": {
+        "navigation": 30000,
+        "action": 15000,
+        "assertion": 10000
+      },
+      "logging": {
+        "level": "error",
+        "logScenarioErrors": true,
+        "includeStack": true,
+        "includeUserContext": false
+      }
+    },
+    "example-tutorial": {
+      "name": "example-tutorial",
+      "description": "Dummy project 'Acme Pizza Co.' for learning. Points at Grafana's public QuickPizza demo so you can run the tutorial with zero local setup.",
+      "baseUrl": "https://quickpizza.grafana.com",
+      "timeouts": {
+        "navigation": 30000,
+        "action": 15000,
+        "assertion": 10000
+      },
+      "logging": {
+        "level": "error",
+        "logScenarioErrors": true,
+        "includeStack": true,
+        "includeUserContext": false
+      }
+    },
+    "self-test": {
+      "name": "self-test",
+      "baseUrl": "https://quickpizza.grafana.com",
+      "timeouts": {
+        "navigation": 30000,
+        "action": 15000,
+        "assertion": 10000
+      },
+      "logging": {
+        "level": "error",
+        "logScenarioErrors": true,
+        "includeStack": true,
+        "includeUserContext": false
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Breakpoint",
+  "description": "Step-up stress profile for finding the point where latency or reliability starts to degrade.",
+  "executor": "ramping-vus",
+  "startVUs": 0,
+  "stages": [
+    { "duration": "1m", "target": 5 },
+    { "duration": "1m", "target": 10 },
+    { "duration": "1m", "target": 20 },
+    { "duration": "1m", "target": 35 },
+    { "duration": "30s", "target": 0 }
+  ],
+  "gracefulRampDown": "30s",
+  "thresholds": {
+    "browser_web_vital_lcp": ["p(95)<4000"],
+    "browser_web_vital_fcp": ["p(95)<2500"],
+    "checks": ["rate>0.95"]
+  }
+}

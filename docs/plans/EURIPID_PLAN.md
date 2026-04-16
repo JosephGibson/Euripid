@@ -1,9 +1,10 @@
 # Euripid - Core Rewrite Plan
 
-> **Document status:** Finalized planning baseline v1.0
-> **Document purpose:** Master plan for rewriting Euripid from the current v0.1 alpha baseline into a TypeScript-first, template-project-based k6/browser framework.
+> **Document status:** Historical planning record
+> **Document purpose:** Archived rewrite plan describing how Euripid moved from the legacy v0.1 layout into the current TypeScript-first, template-project-based k6/browser framework.
 > **Audience:** Implementation agents and the project lead.
-> **Scope:** Product direction, locked architectural decisions, constraints, target structure, and milestone sequencing.
+> **Scope:** Product direction, locked architectural decisions, constraints, target structure, and milestone sequencing during the rewrite period.
+> **Note:** References below to top-level `config/`, `data/`, `src/`, and `results/` describe the legacy baseline that has since been removed from the repo.
 
 ---
 
@@ -480,6 +481,11 @@ But the end goal is not dual-support. The end goal is for the rewrite structure 
 
 ### M0 - Core Architecture Lock
 
+Status:
+
+- Completed
+- Archived record: `docs/plans/archive/MILESTONE_0_CORE_ARCHITECTURE_LOCK_PLAN.md`
+
 Purpose:
 
 - finalize the rewrite decisions
@@ -627,14 +633,14 @@ These rules apply throughout the rewrite:
 
 ---
 
-## 14. Open Questions
+## 14. Resolved Implementation Defaults
 
-These are still open, but they are now narrower than before:
+The rewrite now proceeds with these defaults:
 
-| # | Question | Blocks | Owner |
-|---|---|---|---|
-| 1 | Should harness imports use explicit relative paths first, or should the rewrite invest immediately in stable alias-based imports? | M1 / M2 | Project lead |
-| 2 | Does the rewrite want a Node-based report/build helper layer beyond `run.ps1`, or should PowerShell remain the primary orchestration surface? | M1 / M4 | Project lead |
+| # | Decision | Applied in |
+|---|---|---|
+| 1 | Harness imports use explicit relative paths first. | M1 / M2 |
+| 2 | `scripts/run.ps1` remains the primary orchestration surface. | M1 / M4 |
 
 ---
 

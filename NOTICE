@@ -5,7 +5,7 @@ convenience. k6 is licensed under the GNU Affero General Public License v3.0
 and is copyright Grafana Labs and contributors. The bundled binary is
 unmodified. Source: https://github.com/grafana/k6
 
-Euripid redistributes small vendored helper modules under `src/vendor/` to
+Euripid redistributes small vendored helper modules under `harness/vendor/` to
 avoid runtime dependency on third-party URL imports:
 
   - Papa Parse compatible CSV subset

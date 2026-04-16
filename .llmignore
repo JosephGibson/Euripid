@@ -1,0 +1,5 @@
+# Archived planning records are historical-only and should be skipped by LLM tooling
+docs/plans/archive/
+
+# Historical architecture planning doc — superseded by AGENTS.md and RECIPES.md
+docs/plans/EURIPID_PLAN.md

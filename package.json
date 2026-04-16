@@ -1,0 +1,22 @@
+{
+  "name": "euripid",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript-first k6/browser performance harness with project-local templates.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint harness/ projects/",
+    "lint:fix": "eslint harness/ projects/ --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/k6": "^1.7.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.0.0"
+  }
+}
