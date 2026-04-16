@@ -6,30 +6,26 @@ Versioning has been reset to **0.1.x** for alpha, milestone-driven development. 
 
 ## [Unreleased]
 
-### Rewrite In Progress
-- Added the new TypeScript-first rewrite scaffold with `package.json`, `tsconfig.json`, `harness/`, and `projects/`.
-- Added `projects/template-project/` as the committed validation project with project-local config, profiles, data, pages, flows, scenarios, and results.
-- Ported shared runtime primitives into the rewrite-era harness and exposed stable public entrypoints via `harness/index.ts`, `harness/data.ts`, and `harness/types.ts`.
-- Refactored `scripts/run.ps1` to a project-aware CLI and project-local artifact layout.
-- Rewrote agent and human docs to teach the new `projects/template-project/` workflow.
-- Kept the legacy top-level `config/`, `data/`, and `src/` trees in place as reference material during the transition.
+### Planned
+- No unreleased changes yet.
 
 ## [0.1.0] - 2026-04-15
 
 ### Status
-- Alpha baseline reset from the prior pre-1.0 internal iteration history.
-- Euripid should be treated as an evolving template that will change through milestone-driven work, not as a stable 1.x framework.
+- Initial alpha release of the TypeScript-first `harness/` + `projects/` architecture.
+- Euripid should be treated as an evolving template that will continue to change through milestone-driven work, not as a stable 1.x framework.
 
 ### Included
-- k6 + `k6/browser` template scaffold with Page Object Model layout.
-- JSON-driven environment and load-profile config under `config/`.
-- CSV-driven per-VU data fan-out via `SharedArray` in `src/lib/data.js`.
-- Shared init-context helpers for config loading, summary writing, logging, assertions, metrics, and transactions.
-- Vendored runtime-safe helpers in `src/vendor/` for CSV parsing and report rendering.
-- PowerShell orchestrator (`scripts/run.ps1`) that snapshots inputs, runs k6, and packages each run into a timestamped zip.
-- Per-run output isolation via `RUN_OUTPUT_DIR` so summaries and screenshots land in the correct run directory.
-- Tutorial and demo scenarios including `self-test`, `first-test-tutorial`, `browser-login`, and `google-example`.
-- Agent- and human-facing docs including `AGENTS.md`, `docs/USAGE.md`, `docs/RECIPES.md`, and the overhaul plans in `docs/plans/`.
+- Shared runtime and reporting harness under `harness/` with stable public entrypoints via `harness/index.ts`, `harness/data.ts`, and `harness/types.ts`.
+- Committed `projects/template-project/` bootstrap with project-local config, profiles, CSV data, pages, flows, scenarios, metrics, and results.
+- JSON-driven environment variants in `projects/<project>/project.config.json` and project-local load profiles under `projects/<project>/profiles/`.
+- CSV-driven per-VU data fan-out via `SharedArray` through `harness/data.ts`.
+- Shared init-context helpers for config loading, summary writing, logging, assertions, metrics, transactions, and page objects.
+- Vendored runtime-safe helpers in `harness/vendor/` for CSV parsing and report rendering.
+- PowerShell orchestrator (`scripts/run.ps1`) that resolves project/scenario/profile/environment inputs, snapshots run inputs, runs k6, and packages each run into a timestamped zip.
+- Per-run output isolation via `RUN_OUTPUT_DIR` so summaries and screenshots land in the correct project-local results directory.
+- Committed validation scenarios including `self-test`, `first-test-tutorial`, and `browser-login`.
+- Agent- and human-facing docs including `AGENTS.md`, `README.md`, `docs/USAGE.md`, `docs/RECIPES.md`, and the overhaul plans in `docs/plans/`.
 
 ### Current Baseline Characteristics
 - Stricter environment/profile validation with clearer failure messages.
@@ -37,10 +33,10 @@ Versioning has been reset to **0.1.x** for alpha, milestone-driven development. 
 - Assertion helpers with configurable timeouts and optional fail-fast behavior.
 - Structured `EURIPID_ERROR` logging and scenario/data error counters.
 - Summary persistence using vendored local helpers and a slim `summary.json` by default.
-- Cross-OS `pwsh` compatibility for the orchestrator.
+- Cross-OS `pwsh` compatibility for the orchestrator, with Windows auto-download support for `bin/k6.exe`.
 
 ### Known Limitations
 - No `run.sh` companion script yet.
 - No CI workflow yet.
 - Single-scenario runs only.
-- Windows-first execution model, even though `run.ps1` is written in cross-OS `pwsh`.
+- Linux/macOS still require a local `k6` binary plus PowerShell 7 (`pwsh`) to use the supported runner path.

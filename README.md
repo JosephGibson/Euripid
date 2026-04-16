@@ -7,7 +7,7 @@ TypeScript-first k6 + `k6/browser` performance framework with a shared harness a
 
 ## Status
 
-Euripid is in an active rewrite from the legacy v0.1 alpha layout to the new `harness/` + `projects/` model. The new structure is now the authoritative workflow. The old top-level `config/`, `data/`, and `src/` trees remain in the repo only as transition/reference material until retirement.
+`0.1.0` is the initial alpha release of the new TypeScript-first `harness/` + `projects/` model. The old top-level `config/`, `data/`, and `src/` trees remain in the repo only as transition/reference material until retirement.
 
 ## Why k6/browser instead of Playwright
 
@@ -41,6 +41,8 @@ config/ data/ src/
    ```
 4. Read the tutorial scenario:
    [projects/template-project/scenarios/first-test-tutorial.ts](/home/joker/Projects/Euripid/projects/template-project/scenarios/first-test-tutorial.ts)
+
+Out of the box, the committed runnable paths are `self-test` and `first-test-tutorial`, which target Grafana's public QuickPizza demo. The `browser-login` sample is a template for copied projects and still expects a real application-specific environment.
 
 ## Working Model
 

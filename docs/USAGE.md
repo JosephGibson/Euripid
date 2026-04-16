@@ -77,6 +77,8 @@ Login sample under ramped load:
 ./scripts/run.ps1 -Project template-project -Scenario browser-login -Environment staging -Profile load -RunName release-123
 ```
 
+`self-test` and `first-test-tutorial` are the committed zero-setup validation paths. `browser-login` is a template example, so the shipped `dev` and `staging` environments still use placeholder URLs and should be replaced in copied projects before you expect that scenario to pass.
+
 ## Project config model
 
 Each project owns a `project.config.json` with two responsibilities:
