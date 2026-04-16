@@ -53,6 +53,11 @@
     Sets EURIPID_INCLUDE_USER_CONTEXT=true — error lines may include username
     or role hints from the CSV row (passwords are never logged).
 
+.PARAMETER Validate
+    Resolve all parameters and print the resolved configuration as JSON, then
+    exit without creating a run directory or invoking k6. Useful for agents
+    and humans to verify a parameter combination before committing to a run.
+
 .EXAMPLE
     ./scripts/run.ps1 -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
 
@@ -73,7 +78,8 @@ param(
     [switch] $Quiet,
     [string] $LogLevel = '',
     [switch] $DisableScenarioErrorLog,
-    [switch] $IncludeUserContextInLogs
+    [switch] $IncludeUserContextInLogs,
+    [switch] $Validate
 )
 
 $ErrorActionPreference = 'Stop'
@@ -326,6 +332,29 @@ if ($DataPath) {
 }
 
 Write-Dbg "Inputs validated: project=$Project scenario=$Scenario environment=$Environment profile=$Profile data=$ResolvedDataFile (present=$($script:HasDataFile))"
+
+if ($Validate) {
+    $k6Preview = "$K6 run -e PROJECT=$Project -e ENVIRONMENT=$Environment -e PROJECT_CONFIG_FILE=$ProjectConfigFile -e PROFILE_FILE=$ProfileFile -e RUN_OUTPUT_DIR=<run-dir>"
+    if ($script:HasDataFile) { $k6Preview += " -e DATA_FILE=$DataPath" }
+    if ($LogLevel)           { $k6Preview += " -e EURIPID_LOG_LEVEL=$LogLevel" }
+    $k6Preview += " $ScenarioFile"
+
+    [ordered]@{
+        project             = $Project
+        scenario            = $Scenario
+        environment         = $Environment
+        profile             = $Profile
+        scenarioFile        = $ScenarioFile
+        projectConfigFile   = $ProjectConfigFile
+        profileFile         = $ProfileFile
+        dataFile            = if ($ResolvedDataFile) { $DataPath } else { $null }
+        dataFileFound       = $script:HasDataFile
+        k6Binary            = $K6
+        resolvedEnvironment = $ResolvedEnvironment
+        k6CommandPreview    = $k6Preview
+    } | ConvertTo-Json -Depth 10
+    exit 0
+}
 
 $ResultsRootAbs = Join-Path $RepoRoot "$ProjectRoot/results"
 New-Item -ItemType Directory -Path $ResultsRootAbs -Force | Out-Null

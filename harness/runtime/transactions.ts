@@ -5,6 +5,7 @@ import {
   userActionDuration,
 } from './metrics.ts';
 
+/** Wraps an outer user journey, recording total elapsed time tagged with `transaction`. */
 export async function withTransaction<T>(name: string, fn: () => Promise<T>): Promise<T> {
   const startedAt = Date.now();
   try {
@@ -14,6 +15,7 @@ export async function withTransaction<T>(name: string, fn: () => Promise<T>): Pr
   }
 }
 
+/** Wraps a full-page navigation (goto / waitForNavigation), recording elapsed time tagged with `transaction`. */
 export async function withNavigation<T>(name: string, fn: () => Promise<T>): Promise<T> {
   const startedAt = Date.now();
   try {
@@ -23,6 +25,7 @@ export async function withNavigation<T>(name: string, fn: () => Promise<T>): Pro
   }
 }
 
+/** Wraps a discrete user interaction (click, fill, submit), recording elapsed time tagged with `transaction`. */
 export async function withUserAction<T>(name: string, fn: () => Promise<T>): Promise<T> {
   const startedAt = Date.now();
   try {
@@ -32,6 +35,7 @@ export async function withUserAction<T>(name: string, fn: () => Promise<T>): Pro
   }
 }
 
+/** Wraps a post-navigation readiness check (waitFor, assertVisible), recording elapsed time tagged with `transaction`. */
 export async function withPageLoad<T>(name: string, fn: () => Promise<T>): Promise<T> {
   const startedAt = Date.now();
   try {

@@ -108,6 +108,45 @@ Start with [`docs/RECIPES.md`](docs/RECIPES.md). The new recipes cover:
 - Keep project-specific assets in the project directory. If something is genuinely shared across projects, move it into the harness.
 - Real credentials should not be committed. `projects/template-project/data/users.csv` is dummy sample data only.
 
+## Discovering valid run parameters
+
+Use these shell one-liners to find what each flag accepts before constructing a run command.
+
+```bash
+# Valid -Project values
+ls projects/
+
+# Valid -Scenario values for a given project (strip the .ts extension)
+ls projects/<project>/scenarios/*.ts
+
+# Valid -Environment values for a given project
+jq '.environments | keys' projects/<project>/project.config.json
+
+# Valid -Profile values for a given project (strip the .json extension)
+ls projects/<project>/profiles/*.json
+
+# Valid -DataFile values for a given project
+ls projects/<project>/data/*.csv
+```
+
+Zero-setup validation path (no real credentials or application required):
+
+```powershell
+./scripts/run.ps1 -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
+```
+
+Same path without PowerShell (Linux/macOS):
+
+```bash
+./scripts/run.sh -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
+```
+
+Dry-run to verify a parameter combination resolves correctly without invoking k6:
+
+```powershell
+./scripts/run.ps1 -Validate -Project template-project -Scenario Sc01_self_test -Environment self-test -Profile smoke
+```
+
 ## Historical planning docs
 
 Some files under `docs/plans/` still describe the pre-removal layout as part of rewrite history. Treat those references as archival context, not as implementation targets. New implementation work should target `harness/` and `projects/`.
