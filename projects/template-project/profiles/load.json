@@ -1,6 +1,6 @@
 {
-  "name": "load",
-  "description": "Ramped load test",
+  "name": "Load",
+  "description": "Baseline ramped load profile for routine performance checks.",
   "executor": "ramping-vus",
   "startVUs": 0,
   "stages": [

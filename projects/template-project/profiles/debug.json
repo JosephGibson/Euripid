@@ -1,0 +1,11 @@
+{
+  "name": "Debug",
+  "description": "Single-user debugging profile with generous timing and no aggressive load.",
+  "executor": "shared-iterations",
+  "vus": 1,
+  "iterations": 1,
+  "maxDuration": "10m",
+  "thresholds": {
+    "checks": ["rate>0.99"]
+  }
+}

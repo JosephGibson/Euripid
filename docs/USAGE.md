@@ -48,7 +48,7 @@ Then open [projects/template-project/scenarios/first-test-tutorial.ts](/home/jok
 | Flag | Meaning |
 |---|---|
 | `-DataFile` | CSV filename under `projects/<project>/data/`; if omitted, the runner uses `project.defaultDataFile` when present |
-| `-RunName` | Friendly tag prefixed into the run ID |
+| `-RunName` | Optional informational tag written to `euripid.log`; it does not change the fixed run folder name |
 | `-NoBanner` | Suppress the ASCII startup banner |
 | `-NoZip` | Keep the loose run directory but skip zip packaging |
 | `-Quiet` | Suppress non-error console output |
@@ -112,6 +112,9 @@ Example:
 
 There is no separate `environments/` folder in the new layout.
 
+The committed `template-project` ships with five starter profiles:
+`smoke`, `debug`, `load`, `soak`, and `breakpoint`.
+
 ## Output
 
 Each orchestrated run writes to:
@@ -119,6 +122,21 @@ Each orchestrated run writes to:
 ```text
 projects/<project>/results/<runId>/
 ```
+
+Runner-created `runId` values use this format:
+
+```text
+YYYYMMDD_HHMMSS_ProjectName
+```
+
+Example:
+
+```text
+20260415_221530_TemplateProject
+```
+
+`ProjectName` is derived from `project.config.json -> project.name` with spaces
+and punctuation removed for a filesystem-safe folder token.
 
 Typical contents:
 

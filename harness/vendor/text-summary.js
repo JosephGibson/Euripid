@@ -25,7 +25,21 @@ function metricLine(name, metric) {
 export function textSummary(data, options = {}) {
   const indent = options.indent || ' ';
   const metrics = data && data.metrics ? data.metrics : {};
+  const report = options.report || {};
   const lines = ['Euripid summary'];
+
+  if (report.generatedAt) {
+    lines.push(`${indent}generated_at=${report.generatedAt}`);
+  }
+  if (report.project) {
+    lines.push(`${indent}project=${report.project}`);
+  }
+  if (report.environment) {
+    lines.push(`${indent}environment=${report.environment}`);
+  }
+  if (typeof report.testRunDurationMs === 'number') {
+    lines.push(`${indent}duration_ms=${formatValue(report.testRunDurationMs)}`);
+  }
 
   for (const [name, metric] of Object.entries(metrics)) {
     lines.push(`${indent}${metricLine(name, metric)}`);

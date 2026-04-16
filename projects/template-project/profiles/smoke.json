@@ -1,6 +1,6 @@
 {
-  "name": "smoke",
-  "description": "Single-VU sanity check",
+  "name": "Smoke",
+  "description": "Fast single-user validation profile for basic runner and app health.",
   "executor": "shared-iterations",
   "vus": 1,
   "iterations": 1,

@@ -16,6 +16,9 @@
  *   - k6-console.log               — k6 output (search for EURIPID_ERROR if something fails)
  *   - environment.json             — snapshot of the resolved environment used
  *
+ *   The runner names each run folder as:
+ *   YYYYMMDD_HHMMSS_ProjectName
+ *
  * WHAT THIS SCENARIO TEACHES:
  *   1) Imports — k6/browser, checks, shared harness modules, assertions.
  *   2) options + buildOptions() — how the project-local load profile drives VUs and thresholds.

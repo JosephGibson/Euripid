@@ -6,8 +6,9 @@ Versioning has been reset to **0.1.x** for alpha, milestone-driven development. 
 
 ## [Unreleased]
 
-### Planned
-- No unreleased changes yet.
+### Changed
+- Removed the retired top-level `config/`, `data/`, `src/`, and `results/` trees.
+- Updated current-facing docs and agent guidance to treat `harness/` plus `projects/` as the only active architecture.
 
 ## [0.1.0] - 2026-04-15
 

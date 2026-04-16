@@ -7,13 +7,13 @@ TypeScript-first k6 + `k6/browser` performance framework with a shared harness a
 
 ## Status
 
-`0.1.0` is the initial alpha release of the new TypeScript-first `harness/` + `projects/` model. The old top-level `config/`, `data/`, and `src/` trees remain in the repo only as transition/reference material until retirement.
+`0.1.0` is the initial alpha release of the TypeScript-first `harness/` + `projects/` model. The repo now treats that structure as the only active architecture; the old top-level legacy trees have been removed.
 
 ## Why k6/browser instead of Playwright
 
 Real Playwright cannot run inside a k6 VU. k6 executes JavaScript on its own runtime, not Node, so browser automation here still happens through `k6/browser`. That keeps browser timings, checks, thresholds, and Web Vitals in the same k6 run instead of splitting them across multiple tools.
 
-## New Layout
+## Repo Layout
 
 ```text
 harness/                    shared TypeScript runtime, reporting, types, vendor helpers
@@ -21,9 +21,6 @@ projects/
   template-project/         canonical bootstrap project and committed validation target
 scripts/run.ps1             project-aware orchestrator
 docs/                       usage, recipes, and planning docs
-
-legacy reference only:
-config/ data/ src/
 ```
 
 ## Quick Start
@@ -58,10 +55,6 @@ Out of the box, the committed runnable paths are `self-test` and `first-test-tut
 ## Notes On Transactions
 
 The transaction helpers (`withTransaction`, `withNavigation`, `withUserAction`, `withPageLoad`) still provide named timing boundaries and tagged Trend metrics. On current k6, async browser callbacks cannot be wrapped with `k6/group()`, so these helpers intentionally record metric rows instead of relying on async group nesting.
-
-## Legacy Tree
-
-The legacy top-level `config/`, `data/`, and `src/` directories are still present so the rewrite can be compared against the previous baseline. New work should go into `harness/` and `projects/` unless you are explicitly maintaining the old reference implementation.
 
 ## License
 

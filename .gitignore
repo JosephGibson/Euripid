@@ -1,7 +1,4 @@
-# Run output (keep the placeholder so git tracks the directory)
-results/*/
-results/*.zip
-!results/.gitkeep
+# Project-local run output
 projects/*/results/*/
 projects/*/results/*.zip
 !projects/*/results/.gitkeep

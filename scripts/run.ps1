@@ -29,7 +29,8 @@
     uses `project.defaultDataFile` from `project.config.json` when present.
 
 .PARAMETER RunName
-    Optional friendly tag baked into the output zip name.
+    Optional friendly tag written into the orchestrator log for human context.
+    It does not change the fixed run directory naming format.
 
 .PARAMETER NoBanner
     Suppress the ASCII startup banner.
@@ -119,6 +120,43 @@ function Open-LogFile {
     if ($script:LogBuffer.Count -gt 0) {
         Add-Content -Path $script:LogFile -Value $script:LogBuffer
         $script:LogBuffer.Clear()
+    }
+}
+
+function Convert-ToRunSafeName {
+    param(
+        [Parameter(Mandatory)] [string] $Value,
+        [string] $Fallback = 'Project'
+    )
+
+    $safe = ($Value -replace '[^A-Za-z0-9]+', '')
+    if ([string]::IsNullOrWhiteSpace($safe)) {
+        $safe = ($Fallback -replace '[^A-Za-z0-9]+', '')
+        if ([string]::IsNullOrWhiteSpace($safe)) {
+            return 'Project'
+        }
+    }
+
+    return $safe
+}
+
+function New-RunId {
+    param(
+        [Parameter(Mandatory)] [string] $ResultsRoot,
+        [Parameter(Mandatory)] [string] $ProjectName
+    )
+
+    while ($true) {
+        $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+        $candidate = "${timestamp}_${ProjectName}"
+        $candidateDir = Join-Path $ResultsRoot $candidate
+        $candidateZip = Join-Path $ResultsRoot "$candidate.zip"
+
+        if (-not (Test-Path $candidateDir) -and -not (Test-Path $candidateZip)) {
+            return $candidate
+        }
+
+        Start-Sleep -Seconds 1
     }
 }
 
@@ -289,9 +327,10 @@ if ($DataPath) {
 
 Write-Dbg "Inputs validated: project=$Project scenario=$Scenario environment=$Environment profile=$Profile data=$ResolvedDataFile (present=$($script:HasDataFile))"
 
-$Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$Tag = if ($RunName) { "$RunName-" } else { '' }
-$RunId = "${Tag}${Scenario}-${Environment}-${Profile}-${Timestamp}"
+$ResultsRootAbs = Join-Path $RepoRoot "$ProjectRoot/results"
+New-Item -ItemType Directory -Path $ResultsRootAbs -Force | Out-Null
+$RunProjectName = Convert-ToRunSafeName ([string] $ProjectConfig.project.name) -Fallback $Project
+$RunId = New-RunId -ResultsRoot $ResultsRootAbs -ProjectName $RunProjectName
 $RunDir = "$ProjectRoot/results/$RunId"
 $RunDirAbs = Join-Path $RepoRoot $RunDir
 New-Item -ItemType Directory -Path $RunDirAbs -Force | Out-Null
@@ -300,6 +339,9 @@ New-Item -ItemType Directory -Path (Join-Path $RunDirAbs 'screenshots') -Force |
 Open-LogFile (Join-Path $RunDirAbs 'euripid.log')
 Write-Step "Project: $Project"
 Write-Step "Run ID: $RunId"
+if ($RunName) {
+    Write-Log "RunName: $RunName (informational only; directory naming remains fixed)"
+}
 
 $JsonOut = "$RunDir/k6-stream.json"
 $ConsoleLog = Join-Path $RunDirAbs 'k6-console.log'

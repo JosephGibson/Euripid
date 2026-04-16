@@ -1,9 +1,10 @@
 # Euripid - Core Rewrite Plan
 
-> **Document status:** Finalized planning baseline v1.0
-> **Document purpose:** Master plan for rewriting Euripid from the current v0.1 alpha baseline into a TypeScript-first, template-project-based k6/browser framework.
+> **Document status:** Historical planning record
+> **Document purpose:** Archived rewrite plan describing how Euripid moved from the legacy v0.1 layout into the current TypeScript-first, template-project-based k6/browser framework.
 > **Audience:** Implementation agents and the project lead.
-> **Scope:** Product direction, locked architectural decisions, constraints, target structure, and milestone sequencing.
+> **Scope:** Product direction, locked architectural decisions, constraints, target structure, and milestone sequencing during the rewrite period.
+> **Note:** References below to top-level `config/`, `data/`, `src/`, and `results/` describe the legacy baseline that has since been removed from the repo.
 
 ---
 

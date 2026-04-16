@@ -10,7 +10,7 @@ Euripid is now a **TypeScript-first** k6 + `k6/browser` framework built around:
 2. self-contained testing projects under `projects/`
 3. a committed `projects/template-project/` that users copy as their bootstrap
 
-The old top-level `config/`, `data/`, and `src/` trees are still in the repo, but they are **legacy reference material**, not the target architecture.
+The repo has already removed the old top-level `config/`, `data/`, `src/`, and `results/` trees. Treat `harness/` plus `projects/` as the only active implementation surface.
 
 ## Non-negotiable runtime facts
 
@@ -108,6 +108,8 @@ Start with [`docs/RECIPES.md`](docs/RECIPES.md). The new recipes cover:
 - Keep project-specific assets in the project directory. If something is genuinely shared across projects, move it into the harness.
 - Real credentials should not be committed. `projects/template-project/data/users.csv` is dummy sample data only.
 
-## Legacy directories
+## Historical planning docs
 
-If you land in `config/`, `data/`, or `src/`, treat them as **legacy reference only** unless the task is explicitly about maintaining the pre-rewrite baseline. New implementation work should target `harness/` and `projects/`.
+Some files under `docs/plans/` still describe the pre-removal layout as part of rewrite history. Treat those references as archival context, not as implementation targets. New implementation work should target `harness/` and `projects/`.
+
+`docs/plans/archive/` is archival-only. Ignore it during normal agent work unless the user explicitly asks for historical plan research.

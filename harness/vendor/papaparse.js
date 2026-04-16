@@ -1,6 +1,6 @@
 // Minimal vendored CSV parser for Euripid.
 // Source provenance: behavior-compatible subset of Papa Parse 5.1.1 used by
-// src/lib/data.js (header row parsing + skipEmptyLines).
+// Euripid's CSV loader (header row parsing + skipEmptyLines).
 
 function parseRows(input) {
   const rows = [];
